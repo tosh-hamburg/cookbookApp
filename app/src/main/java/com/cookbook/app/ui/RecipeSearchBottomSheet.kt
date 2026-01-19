@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.cookbook.app.R
 import com.cookbook.app.data.models.MealType
 import com.cookbook.app.data.models.RecipeListItem
@@ -38,12 +39,19 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
     private var onRecipeSelected: ((RecipeListItem, Int, MealType) -> Unit)? = null
 
     private var searchJob: Job? = null
-    private var allRecipes: List<RecipeListItem> = emptyList()
-
+    private var allRecipes: MutableList<RecipeListItem> = mutableListOf()
+    
+    // Pagination state
+    private var currentOffset = 0
+    private var hasMore = true
+    private var isLoadingMore = false
+    private var currentSearchQuery = ""
+    
     companion object {
         private const val ARG_DAY_INDEX = "dayIndex"
         private const val ARG_MEAL_TYPE = "mealType"
         private const val ARG_DAY_NAME = "dayName"
+        private const val PAGE_SIZE = 30
 
         fun newInstance(
             dayIndex: Int,
@@ -114,9 +122,30 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
             dismiss()
         }
 
+        val linearLayoutManager = LinearLayoutManager(requireContext())
         binding.recyclerViewRecipes.apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            layoutManager = linearLayoutManager
             adapter = this@RecipeSearchBottomSheet.adapter
+            
+            // Infinite scroll listener
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    
+                    if (dy > 0 && currentSearchQuery.isEmpty()) { // Only paginate when not filtering
+                        val visibleItemCount = linearLayoutManager.childCount
+                        val totalItemCount = linearLayoutManager.itemCount
+                        val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
+                        
+                        // Load more when near the end
+                        if (!isLoadingMore && hasMore) {
+                            if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5) {
+                                loadMoreRecipes()
+                            }
+                        }
+                    }
+                }
+            })
         }
     }
 
@@ -144,14 +173,22 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun loadRecipes() {
+        // Reset pagination state
+        currentOffset = 0
+        hasMore = true
+        allRecipes.clear()
+        adapter.submitList(emptyList())
+        
         setLoading(true)
 
         lifecycleScope.launch {
-            val result = recipeRepository.getRecipes(limit = 100, offset = 0)
+            val result = recipeRepository.getRecipes(limit = PAGE_SIZE, offset = 0)
 
             result.onSuccess { paginatedResult ->
-                allRecipes = paginatedResult.items
-                adapter.submitList(allRecipes)
+                allRecipes = paginatedResult.items.toMutableList()
+                hasMore = paginatedResult.hasMore
+                currentOffset = paginatedResult.items.size
+                adapter.submitList(allRecipes.toList())
                 updateEmptyState(allRecipes.isEmpty())
             }.onFailure {
                 updateEmptyState(true)
@@ -160,10 +197,31 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
             setLoading(false)
         }
     }
+    
+    private fun loadMoreRecipes() {
+        if (isLoadingMore || !hasMore) return
+        
+        isLoadingMore = true
+        
+        lifecycleScope.launch {
+            val result = recipeRepository.getRecipes(limit = PAGE_SIZE, offset = currentOffset)
+            
+            result.onSuccess { paginatedResult ->
+                allRecipes.addAll(paginatedResult.items)
+                hasMore = paginatedResult.hasMore
+                currentOffset += paginatedResult.items.size
+                adapter.submitList(allRecipes.toList())
+            }
+            
+            isLoadingMore = false
+        }
+    }
 
     private fun filterRecipes(query: String) {
+        currentSearchQuery = query
+        
         if (query.isEmpty()) {
-            adapter.submitList(allRecipes)
+            adapter.submitList(allRecipes.toList())
             updateEmptyState(allRecipes.isEmpty())
             return
         }

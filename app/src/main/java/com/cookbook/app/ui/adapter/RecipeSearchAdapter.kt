@@ -5,8 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
 import com.cookbook.app.R
+import com.cookbook.app.util.ImageUtils
 import com.cookbook.app.data.models.RecipeListItem
 import com.cookbook.app.databinding.ItemRecipeSearchBinding
 
@@ -61,11 +61,12 @@ class RecipeSearchAdapter(
                 // Categories
                 textCategories.text = recipe.categories.joinToString(", ")
                 
-                // Image
-                imageRecipe.load(recipe.thumbnail) {
-                    placeholder(R.drawable.placeholder_recipe)
-                    error(R.drawable.placeholder_recipe)
-                }
+                // Image (handles both Base64 and URLs)
+                ImageUtils.loadImage(
+                    imageRecipe,
+                    recipe.thumbnail,
+                    R.drawable.placeholder_recipe
+                )
             }
         }
     }

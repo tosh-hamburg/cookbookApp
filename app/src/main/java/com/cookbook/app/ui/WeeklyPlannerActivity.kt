@@ -12,8 +12,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import coil.load
 import com.cookbook.app.R
+import com.cookbook.app.util.ImageUtils
 import com.cookbook.app.data.models.*
 import com.cookbook.app.data.repository.MealPlanRepository
 import com.cookbook.app.databinding.ActivityWeeklyPlannerBinding
@@ -202,12 +202,12 @@ class WeeklyPlannerActivity : AppCompatActivity() {
             slotBinding.textRecipeTitle.text = recipe.title
             slotBinding.textServings.text = mealSlot.servings.toString()
 
-            // Load recipe image
-            val imageUrl = recipe.firstImage
-            slotBinding.imageRecipe.load(imageUrl) {
-                placeholder(R.drawable.placeholder_recipe)
-                error(R.drawable.placeholder_recipe)
-            }
+            // Load recipe image (handles both Base64 and URLs)
+            ImageUtils.loadImage(
+                slotBinding.imageRecipe,
+                recipe.firstImage,
+                R.drawable.placeholder_recipe
+            )
 
             // Servings controls
             slotBinding.btnDecreaseServings.setOnClickListener {
