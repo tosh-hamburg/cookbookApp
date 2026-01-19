@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Base: Warm kitchen atmosphere gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#8B4513"
+                android:centerColor="#A0522D"
+                android:endColor="#CD853F"
+                android:angle="45"
+                android:type="linear"/>
+        </shape>
+    </item>
+    
+    <!-- Layer 2: Soft warm light from top-right -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#40FFD700"
+                android:endColor="#00000000"
+                android:type="radial"
+                android:gradientRadius="400dp"
+                android:centerX="0.8"
+                android:centerY="0.2"/>
+        </shape>
+    </item>
+    
+    <!-- Layer 3: Depth shadow on left -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#60000000"
+                android:endColor="#00000000"
+                android:angle="0"
+                android:type="linear"/>
+        </shape>
+    </item>
+    
+    <!-- Layer 4: Bottom vignette for text contrast -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#00000000"
+                android:endColor="#90000000"
+                android:angle="270"
+                android:type="linear"/>
+        </shape>
+    </item>
+    
+</layer-list>

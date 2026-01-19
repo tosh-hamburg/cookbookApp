@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cookbook</string>
+    
+    <!-- Login -->
+    <string name="username">Benutzername</string>
+    <string name="password">Passwort</string>
+    <string name="login">Anmelden</string>
+    <string name="login_subtitle">Melden Sie sich an, um auf Cookbook zuzugreifen</string>
+    <string name="sign_in_with_google">Mit Google anmelden</string>
+    <string name="or_divider">oder</string>
+    <string name="two_factor_title">Zwei-Faktor-Authentifizierung</string>
+    <string name="two_factor_description">Bitte gib den 6-stelligen Code aus deiner Authenticator-App ein.</string>
+    <string name="two_factor_code">Code</string>
+    <string name="verify">Bestätigen</string>
+    <string name="logout">Abmelden</string>
+    
+    <!-- Recipe List -->
+    <string name="search_recipes">Rezepte suchen…</string>
+    <string name="search">Suchen</string>
+    <string name="refresh">Aktualisieren</string>
+    <string name="no_recipes">Noch keine Rezepte vorhanden</string>
+    <string name="add_first_recipe">Füge dein erstes Rezept hinzu!</string>
+    
+    <!-- Collections -->
+    <string name="collections">Sammlungen</string>
+    <string name="all_recipes">Alle Rezepte</string>
+    <string name="no_collections">Keine Sammlungen vorhanden</string>
+    <string name="recipes_count">%d Rezepte</string>
+    <string name="filter_by_collection">Nach Sammlung filtern</string>
+    
+    <!-- Recipe Detail -->
+    <string name="ingredients">Zutaten</string>
+    <string name="ingredients_for">Zutaten für</string>
+    <string name="instructions">Zubereitung</string>
+    <string name="servings">Portionen</string>
+    <string name="portion_singular">Portion</string>
+    <string name="portion_plural">Portionen</string>
+    <string name="original_recipe_for">Originalrezept für %d %s</string>
+    <string name="add_to_shopping_list">Zur Einkaufsliste hinzufügen</string>
+    <string name="prep_time">Vorbereitung</string>
+    <string name="rest_time">Ruhezeit</string>
+    <string name="cook_time">Kochen</string>
+    <string name="total_time">Gesamt</string>
+    <string name="minutes">Min.</string>
+    <string name="calories">Kalorien</string>
+    <string name="weight_unit">Einheit</string>
+    <string name="view_source">Quelle anzeigen</string>
+    
+    <!-- Recipe Edit -->
+    <string name="add_recipe">Rezept hinzufügen</string>
+    <string name="edit_recipe">Rezept bearbeiten</string>
+    <string name="recipe_name">Rezeptname</string>
+    <string name="recipe_category">Kategorie</string>
+    <string name="time_info">Zeitangaben (in Minuten)</string>
+    <string name="amount">Menge</string>
+    <string name="ingredient">Zutat</string>
+    <string name="add_ingredient">Zutat hinzufügen</string>
+    <string name="edit_ingredient">Zutat bearbeiten</string>
+    <string name="no_ingredients">Keine Zutaten hinzugefügt</string>
+    <string name="clear_all">Alle löschen</string>
+    <string name="images">Bilder</string>
+    <string name="images_hint">Bild-URLs (eine pro Zeile)</string>
+    <string name="take_photo">Foto</string>
+    <string name="choose_from_gallery">Galerie</string>
+    <string name="no_images">Keine Bilder hinzugefügt</string>
+    <string name="adding_image">Bild wird hinzugefügt…</string>
+    <string name="image_added">Bild hinzugefügt</string>
+    <string name="error_loading_image">Fehler beim Laden des Bildes</string>
+    <string name="camera_permission_required">Kamera-Berechtigung erforderlich</string>
+    <string name="storage_permission_required">Speicher-Berechtigung erforderlich</string>
+    <string name="source_url">Quell-URL</string>
+    <string name="save">Speichern</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="delete">Löschen</string>
+    <string name="share">Teilen</string>
+    <string name="delete_recipe">Rezept löschen</string>
+    <string name="delete_recipe_confirm">Möchtest du dieses Rezept wirklich löschen?</string>
+    <string name="manage_collections">Sammlungen</string>
+    <string name="send_to_gemini">An Gemini senden</string>
+    <string name="gemini_prompt_copied">Prompt kopiert!</string>
+    <string name="gemini_prompt_description">Der Prompt wurde in die Zwischenablage kopiert. Möchtest du jetzt Gemini öffnen, um ihn einzufügen?</string>
+    <string name="open_gemini">Gemini öffnen</string>
+    <string name="gemini_not_found">Gemini konnte nicht geöffnet werden. Bitte öffne die Gemini-App manuell.</string>
+    <string name="clipboard_error">Konnte nicht in Zwischenablage kopieren</string>
+    <string name="select_collections">Sammlungen auswählen</string>
+    <string name="recipe_added_to_collection">Rezept zur Sammlung hinzugefügt</string>
+    <string name="recipe_removed_from_collection">Rezept aus Sammlung entfernt</string>
+    <string name="error_updating_collection">Fehler beim Aktualisieren der Sammlung</string>
+    <string name="selected_collection">Ausgewählte Sammlung</string>
+    <string name="collections_title">Sammlungen</string>
+    
+    <!-- Recipe Import -->
+    <string name="import_title">Rezept importieren</string>
+    <string name="import_description">Gib die URL einer Rezept-Webseite ein, um das Rezept automatisch zu importieren.</string>
+    <string name="recipe_url">Rezept-URL</string>
+    <string name="import_recipe">Importieren</string>
+    
+    <!-- Messages -->
+    <string name="recipe_saved">Rezept gespeichert</string>
+    <string name="recipe_deleted">Rezept gelöscht</string>
+    <string name="error_saving">Fehler beim Speichern</string>
+    <string name="field_required">Dieses Feld ist erforderlich</string>
+    
+    <!-- Plurals -->
+    <plurals name="recipe_count">
+        <item quantity="one">%d Rezept</item>
+        <item quantity="other">%d Rezepte</item>
+    </plurals>
+    
+    <!-- Weekly Planner -->
+    <string name="weekly_planner">Wochenplaner</string>
+    <string name="this_week">Diese Woche</string>
+    <string name="coming_week">Kommende Woche</string>
+    <string name="previous_week">Vorherige Woche</string>
+    <string name="next_week">Nächste Woche</string>
+    <string name="calendar_week">KW %d</string>
+    <string name="no_meals_planned">Noch keine Mahlzeiten geplant</string>
+    <string name="add_meals_hint">Tippen Sie auf einen Tag, um Rezepte zu Ihrem Wochenplan hinzuzufügen.</string>
+    <string name="select_recipe">Rezept auswählen</string>
+    <string name="no_recipes_found">Keine Rezepte gefunden</string>
+    <string name="remove_recipe">Rezept entfernen</string>
+    <string name="decrease_servings">Portionen verringern</string>
+    <string name="increase_servings">Portionen erhöhen</string>
+    <string name="aggregated_ingredients">Zusammengefasste Zutaten</string>
+    <string name="ingredients_count">%d Zutaten</string>
+    <string name="send_ingredients_to_gemini">Zutaten an Gemini senden</string>
+    <string name="error_loading_meal_plan">Fehler beim Laden des Wochenplans</string>
+    <string name="error_saving_meal">Fehler beim Speichern der Mahlzeit</string>
+    <string name="meal_saved">Mahlzeit gespeichert</string>
+    <string name="meal_removed">Mahlzeit entfernt</string>
+    <string name="breakfast">Frühstück</string>
+    <string name="lunch">Mittagessen</string>
+    <string name="dinner">Abendessen</string>
+    <string name="minutes_format">%d Min.</string>
+    <string name="portions_format">%d Port.</string>
+    <string name="new_ingredients">Neue Zutaten</string>
+    <string name="already_sent">Bereits gesendet</string>
+    <string name="restore_excluded">Gelöschte wiederherstellen</string>
+    <string name="reset_sent">Gesendet zurücksetzen</string>
+    <string name="send_new_ingredients">Neue Zutaten senden</string>
+    <string name="send_all_ingredients">Alle senden</string>
+    <string name="ingredient_excluded">Zutat ausgeschlossen</string>
+    <string name="ingredient_restored">Zutat wiederhergestellt</string>
+    <string name="ingredients_sent">Zutaten gesendet</string>
+    <string name="sent_reset">Gesendet zurückgesetzt</string>
+    <string name="excluded_reset">Gelöschte wiederhergestellt</string>
+    <string name="new_sent_format">%d neu / %d gesendet</string>
+</resources>

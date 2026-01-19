@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 
+    Network Security Configuration
+    
+    This config allows:
+    - System CA certificates for all domains
+    - User-installed certificates in debug mode (for development/testing)
+    
+    If you need to trust specific certificates for your server,
+    you can add a domain-config section. See:
+    https://developer.android.com/training/articles/security-config
+    -->
+    
+    <!-- Base config: Trust system CAs -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Debug-Mode: Additionally trust user-installed certificates -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

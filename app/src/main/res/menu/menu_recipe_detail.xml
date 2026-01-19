@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_edit"
+        android:icon="@drawable/ic_edit"
+        android:title="@string/edit"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_collections"
+        android:icon="@drawable/ic_collections"
+        android:title="@string/manage_collections"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_gemini"
+        android:icon="@drawable/ic_gemini"
+        android:title="@string/send_to_gemini"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/ic_share"
+        android:title="@string/share"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_delete"
+        android:icon="@drawable/ic_delete"
+        android:title="@string/delete"
+        app:showAsAction="never" />
+
+</menu>

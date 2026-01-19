@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors - Warm Orange/Terracotta -->
+    <color name="primary">#D4654A</color>
+    <color name="primary_variant">#B84C33</color>
+    <color name="primary_light">#E8866F</color>
+    
+    <!-- Secondary Colors - Sage Green -->
+    <color name="secondary">#7D9B76</color>
+    <color name="secondary_variant">#5E7A58</color>
+    <color name="secondary_light">#A5BDA0</color>
+    
+    <!-- Accent Colors -->
+    <color name="accent">#E6A756</color>
+    <color name="accent_dark">#C98A3C</color>
+    
+    <!-- Background Colors -->
+    <color name="background">#FDF8F3</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F5EDE6</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#2D2926</color>
+    <color name="text_secondary">#5C5652</color>
+    <color name="text_hint">#9A928B</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_on_secondary">#FFFFFF</color>
+    
+    <!-- Status Colors -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#E53935</color>
+    
+    <!-- Difficulty Colors -->
+    <color name="difficulty_easy">#4CAF50</color>
+    <color name="difficulty_medium">#FF9800</color>
+    <color name="difficulty_hard">#F44336</color>
+    
+    <!-- Category Chip Colors -->
+    <color name="chip_background">#F0E6DC</color>
+    <color name="chip_text">#5C5652</color>
+    
+    <!-- Card Colors -->
+    <color name="card_background">#FFFFFF</color>
+    <color name="card_stroke">#E8E0D8</color>
+    
+    <!-- Divider -->
+    <color name="divider">#E0D8D0</color>
+    
+    <!-- Favorite -->
+    <color name="favorite_active">#E53935</color>
+    <color name="favorite_inactive">#BDBDBD</color>
+</resources>

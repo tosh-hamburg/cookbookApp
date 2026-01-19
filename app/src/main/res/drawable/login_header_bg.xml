@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Base: Warm kitchen atmosphere gradient (matching Unsplash cooking image mood) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#8B4513"
+                android:centerColor="#A0522D"
+                android:endColor="#CD853F"
+                android:angle="135"
+                android:type="linear"/>
+        </shape>
+    </item>
+    
+    <!-- Layer 2: Soft warm light from top-right -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#50FFD700"
+                android:endColor="#00000000"
+                android:type="radial"
+                android:gradientRadius="600dp"
+                android:centerX="0.7"
+                android:centerY="0.1"/>
+        </shape>
+    </item>
+    
+    <!-- Layer 3: Dark shadows for depth -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#50000000"
+                android:endColor="#00000000"
+                android:angle="45"
+                android:type="linear"/>
+        </shape>
+    </item>
+    
+    <!-- Layer 4: Vignette effect -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#00000000"
+                android:endColor="#70000000"
+                android:type="radial"
+                android:gradientRadius="700dp"
+                android:centerX="0.5"
+                android:centerY="0.5"/>
+        </shape>
+    </item>
+    
+</layer-list>

@@ -1,0 +1,41 @@
+## This file is a template for local.properties
+# Copy this file to local.properties and fill in your values.
+# local.properties is ignored by git and should never be committed!
+
+# =============================================================================
+# Android SDK Configuration
+# =============================================================================
+# Location of the SDK. This is only used by Gradle.
+# Android Studio usually sets this automatically.
+# sdk.dir=/path/to/your/Android/Sdk
+
+# =============================================================================
+# Cookbook App Configuration
+# =============================================================================
+
+# Google Sign-In Client ID (Web Application type from Google Cloud Console)
+# Required for Google Sign-In functionality
+# Get your client ID from: https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+
+# =============================================================================
+# API Server Configuration
+# =============================================================================
+# The app supports automatic network detection to use different URLs
+# for internal (same network) and external (internet) access.
+
+# Internal API URL (used when device is on the same network as the server)
+# Example: https://192.168.1.100:3003/api or https://myserver.local:3003/api
+API_URL_INTERNAL=https://your-server.example.com:3003/api
+
+# External API URL (used when device is outside the local network)
+# Example: https://cookbook.mydomain.com/api
+API_URL_EXTERNAL=https://your-server.example.com/api
+
+# Internal host for network detection (hostname or IP without protocol/port)
+# The app checks if this host is reachable to determine network location
+INTERNAL_HOST=your-server.example.com
+
+# Internal port for network detection
+# Used together with INTERNAL_HOST to test connectivity
+INTERNAL_PORT=3003
