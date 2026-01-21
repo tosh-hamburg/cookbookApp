@@ -160,7 +160,7 @@ class WeeklyPlannerActivity : AppCompatActivity() {
                 false
             )
 
-            dayBinding.textDayName.text = day.getDayName()
+            dayBinding.textDayName.text = day.getDayName(this)
             dayBinding.textDate.text = day.getFormattedDate()
 
             // Add meal slots
@@ -174,7 +174,7 @@ class WeeklyPlannerActivity : AppCompatActivity() {
                     false
                 )
 
-                setupMealSlotView(slotBinding, mealSlot, day.dayIndex, day.getDayName())
+                setupMealSlotView(slotBinding, mealSlot, day.dayIndex, day.getDayName(this))
                 dayBinding.mealSlotsContainer.addView(slotBinding.root)
             }
 
@@ -192,7 +192,7 @@ class WeeklyPlannerActivity : AppCompatActivity() {
 
         // Set meal type icon and label
         slotBinding.iconMealType.setImageResource(getMealTypeIcon(mealType))
-        slotBinding.textMealType.text = mealType.label
+        slotBinding.textMealType.text = mealType.getLabel(this)
 
         val recipe = mealSlot.recipe
         if (recipe != null) {

@@ -1,5 +1,7 @@
 package com.cookbook.app.data.models
 
+import android.content.Context
+import com.cookbook.app.R
 import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.*
@@ -7,10 +9,15 @@ import java.util.*
 /**
  * Meal type enum
  */
-enum class MealType(val key: String, val label: String) {
-    BREAKFAST("breakfast", "Frühstück"),
-    LUNCH("lunch", "Mittagessen"),
-    DINNER("dinner", "Abendessen");
+enum class MealType(val key: String, val labelResId: Int) {
+    BREAKFAST("breakfast", R.string.breakfast),
+    LUNCH("lunch", R.string.lunch),
+    DINNER("dinner", R.string.dinner);
+    
+    /**
+     * Get the localized label for this meal type
+     */
+    fun getLabel(context: Context): String = context.getString(labelResId)
     
     companion object {
         fun fromKey(key: String): MealType? = entries.find { it.key == key }
@@ -18,10 +25,19 @@ enum class MealType(val key: String, val label: String) {
 }
 
 /**
- * Day names in German
+ * Helper object for localized day names
  */
-val DAY_NAMES = listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
-val DAY_NAMES_SHORT = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+object DayNames {
+    fun getDayName(context: Context, dayIndex: Int): String {
+        val dayNames = context.resources.getStringArray(R.array.day_names)
+        return dayNames.getOrElse(dayIndex) { "" }
+    }
+    
+    fun getDayNameShort(context: Context, dayIndex: Int): String {
+        val dayNamesShort = context.resources.getStringArray(R.array.day_names_short)
+        return dayNamesShort.getOrElse(dayIndex) { "" }
+    }
+}
 
 /**
  * MealSlot from API response
@@ -89,12 +105,12 @@ data class DayPlan(
     }
     
     fun getFormattedDate(): String {
-        val format = SimpleDateFormat("dd.MM.", Locale.GERMANY)
+        val format = SimpleDateFormat("dd.MM.", Locale.getDefault())
         return format.format(date)
     }
     
-    fun getDayName(): String = DAY_NAMES.getOrElse(dayIndex) { "" }
-    fun getDayNameShort(): String = DAY_NAMES_SHORT.getOrElse(dayIndex) { "" }
+    fun getDayName(context: Context): String = DayNames.getDayName(context, dayIndex)
+    fun getDayNameShort(context: Context): String = DayNames.getDayNameShort(context, dayIndex)
 }
 
 /**
@@ -128,11 +144,17 @@ data class WeekPlan(
             return WeekPlan(weekStart, weekEnd, days)
         }
         
+        // Use Europe/Berlin timezone to match web frontend behavior
+        // The web app was likely used in this timezone when creating meal plans
+        private val webTimezone = TimeZone.getTimeZone("Europe/Berlin")
+        
         /**
          * Get the start of the current week (Monday)
+         * Uses Europe/Berlin timezone to match web frontend behavior.
+         * This ensures consistency regardless of the device's local timezone.
          */
         fun getCurrentWeekStart(): Date {
-            val calendar = Calendar.getInstance()
+            val calendar = Calendar.getInstance(webTimezone)
             val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
             
             // Calculate days since Monday (Monday = 2 in Calendar)
@@ -152,9 +174,10 @@ data class WeekPlan(
         
         /**
          * Get the start of the next week (next Monday)
+         * Uses Europe/Berlin timezone to match web frontend behavior.
          */
         fun getNextWeekStart(): Date {
-            val calendar = Calendar.getInstance()
+            val calendar = Calendar.getInstance(webTimezone)
             val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
             
             // Calculate days until next Monday
@@ -193,6 +216,9 @@ data class WeekPlan(
         
         /**
          * Format date for API (ISO 8601)
+         * Uses UTC timezone to match the web frontend behavior.
+         * The web app uses: weekStart.toISOString().split('T')[0]
+         * which converts to UTC before formatting.
          */
         fun formatDateForApi(date: Date): String {
             val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)

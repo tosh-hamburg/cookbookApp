@@ -19,23 +19,12 @@
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 
 # =============================================================================
-# API Server Configuration
+# Server URL Configuration (Runtime)
 # =============================================================================
-# The app supports automatic network detection to use different URLs
-# for internal (same network) and external (internet) access.
-
-# Internal API URL (used when device is on the same network as the server)
-# Example: https://192.168.1.100:3003/api or https://myserver.local:3003/api
-API_URL_INTERNAL=https://your-server.example.com:3003/api
-
-# External API URL (used when device is outside the local network)
-# Example: https://cookbook.mydomain.com/api
-API_URL_EXTERNAL=https://your-server.example.com/api
-
-# Internal host for network detection (hostname or IP without protocol/port)
-# The app checks if this host is reachable to determine network location
-INTERNAL_HOST=your-server.example.com
-
-# Internal port for network detection
-# Used together with INTERNAL_HOST to test connectivity
-INTERNAL_PORT=3003
+# Note: The API server URL is now configured at runtime during first app launch.
+# You will be prompted to enter your server URL when you start the app.
+# The URL is stored in app settings and can be changed from the login screen.
+#
+# Example URLs:
+# - https://cookbook.example.com/api (via reverse proxy)
+# - https://192.168.1.100:3003/api (direct local access)

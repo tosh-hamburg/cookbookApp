@@ -101,9 +101,8 @@ class MainActivity : AppCompatActivity() {
     
     private fun updateToolbarSubtitle() {
         val user = authRepository.getCachedUser()
-        val networkInfo = if (ApiClient.isUsingInternalNetwork()) "intern" else "extern"
         val collectionInfo = selectedCollection?.let { " • 📁 ${it.name}" } ?: ""
-        supportActionBar?.subtitle = "${user?.displayName ?: "Unbekannt"} • $networkInfo$collectionInfo"
+        supportActionBar?.subtitle = "${user?.displayName ?: getString(R.string.unknown)}$collectionInfo"
     }
     
     private fun setupRecyclerView() {
@@ -449,15 +448,15 @@ class MainActivity : AppCompatActivity() {
     
     private fun performLogout() {
         AlertDialog.Builder(this)
-            .setTitle("Abmelden")
-            .setMessage("Möchtest du dich wirklich abmelden?")
-            .setPositiveButton("Ja") { _, _ ->
+            .setTitle(R.string.logout)
+            .setMessage(R.string.logout_confirmation)
+            .setPositiveButton(R.string.yes) { _, _ ->
                 lifecycleScope.launch {
                     authRepository.logout()
                     navigateToLogin()
                 }
             }
-            .setNegativeButton("Nein", null)
+            .setNegativeButton(R.string.no, null)
             .show()
     }
 }

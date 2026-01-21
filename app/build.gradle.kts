@@ -34,13 +34,6 @@ android {
         // Configuration from local.properties
         // Google Sign-In Client ID
         buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${getLocalProperty("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID")}\"")
-        
-        // API URLs - automatische Erkennung intern/extern
-        buildConfigField("String", "API_URL_INTERNAL", "\"${getLocalProperty("API_URL_INTERNAL", "https://your-server.example.com:3003/api")}\"")
-        buildConfigField("String", "API_URL_EXTERNAL", "\"${getLocalProperty("API_URL_EXTERNAL", "https://your-server.example.com/api")}\"")
-        // Hostname für Netzwerkerkennung (TCP-Check)
-        buildConfigField("String", "INTERNAL_HOST", "\"${getLocalProperty("INTERNAL_HOST", "your-server.example.com")}\"")
-        buildConfigField("int", "INTERNAL_PORT", getLocalProperty("INTERNAL_PORT", "3003"))
     }
 
     buildTypes {

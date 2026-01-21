@@ -16,13 +16,14 @@ import kotlinx.coroutines.runBlocking
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
 /**
- * Manages authentication tokens and user data using DataStore
+ * Manages authentication tokens, user data, and API URL using DataStore
  */
 class TokenManager(private val context: Context) {
     
     companion object {
         private val TOKEN_KEY = stringPreferencesKey("auth_token")
         private val USER_KEY = stringPreferencesKey("current_user")
+        private val API_URL_KEY = stringPreferencesKey("api_base_url")
     }
     
     private val gson = Gson()
@@ -111,6 +112,40 @@ class TokenManager(private val context: Context) {
         }
     }
     
+    // ==================== API URL ====================
+    
+    /**
+     * Save the API base URL
+     */
+    suspend fun saveApiUrl(url: String) {
+        context.dataStore.edit { preferences ->
+            preferences[API_URL_KEY] = url
+        }
+    }
+    
+    /**
+     * Get the API base URL as a Flow
+     */
+    val apiUrlFlow: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[API_URL_KEY]
+    }
+    
+    /**
+     * Get the API base URL synchronously
+     */
+    fun getApiUrlSync(): String? {
+        return runBlocking {
+            context.dataStore.data.first()[API_URL_KEY]
+        }
+    }
+    
+    /**
+     * Check if API URL is configured
+     */
+    fun isApiUrlConfigured(): Boolean {
+        return getApiUrlSync() != null
+    }
+    
     // ==================== Combined ====================
     
     /**
@@ -126,12 +161,23 @@ class TokenManager(private val context: Context) {
     }
     
     /**
-     * Clear all auth data (logout)
+     * Clear all auth data (logout) - keeps API URL
      */
     suspend fun clearAll() {
         context.dataStore.edit { preferences ->
             preferences.remove(TOKEN_KEY)
             preferences.remove(USER_KEY)
+        }
+    }
+    
+    /**
+     * Clear everything including API URL (full reset)
+     */
+    suspend fun clearEverything() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(TOKEN_KEY)
+            preferences.remove(USER_KEY)
+            preferences.remove(API_URL_KEY)
         }
     }
 }

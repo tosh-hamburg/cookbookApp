@@ -109,7 +109,7 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupUI() {
-        binding.textSlotInfo.text = "$dayName - ${mealType.label}"
+        binding.textSlotInfo.text = "$dayName - ${mealType.getLabel(requireContext())}"
 
         binding.btnClose.setOnClickListener {
             dismiss()

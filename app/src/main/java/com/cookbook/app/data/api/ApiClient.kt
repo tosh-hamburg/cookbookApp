@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.cookbook.app.BuildConfig
 import com.cookbook.app.data.auth.TokenManager
-import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -19,7 +18,7 @@ import javax.net.ssl.X509TrustManager
 
 /**
  * Singleton API client for backend communication.
- * Automatically detects internal/external network and uses the appropriate URL.
+ * Uses user-configured API URL stored in settings.
  */
 object ApiClient {
     
@@ -32,58 +31,48 @@ object ApiClient {
     
     /**
      * Initialize the API client with context for token management.
-     * This performs network detection to determine the correct API URL.
-     */
-    suspend fun initializeAsync(context: Context) {
-        tokenManager = TokenManager(context)
-        
-        // Detect network and get appropriate URL
-        val baseUrl = NetworkDetector.getApiBaseUrl()
-        
-        if (currentBaseUrl != baseUrl || retrofit == null) {
-            currentBaseUrl = baseUrl
-            val isInternal = baseUrl == BuildConfig.API_URL_INTERNAL
-            retrofit = createRetrofit(baseUrl, trustAllCerts = isInternal)
-            api = retrofit?.create(CookbookApi::class.java)
-            Log.i(TAG, "API client initialized with URL: $baseUrl (internal=$isInternal)")
-        }
-    }
-    
-    /**
-     * Initialize synchronously (for cases where coroutine isn't available).
-     * Uses cached URL or runs blocking detection.
+     * Uses the stored API URL from settings.
      */
     fun initialize(context: Context) {
         tokenManager = TokenManager(context)
         
-        // Use cached URL or run blocking detection
-        val baseUrl = NetworkDetector.getCachedUrl() ?: runBlocking {
-            NetworkDetector.getApiBaseUrl()
-        }
-        
-        if (currentBaseUrl != baseUrl || retrofit == null) {
-            currentBaseUrl = baseUrl
-            val isInternal = baseUrl == BuildConfig.API_URL_INTERNAL
-            retrofit = createRetrofit(baseUrl, trustAllCerts = isInternal)
-            api = retrofit?.create(CookbookApi::class.java)
-            Log.i(TAG, "API client initialized with URL: $baseUrl (internal=$isInternal)")
+        val baseUrl = tokenManager?.getApiUrlSync()
+        if (baseUrl != null) {
+            setupRetrofit(baseUrl)
         }
     }
     
     /**
-     * Reinitialize with fresh network detection.
-     * Call this when network conditions might have changed.
+     * Initialize with a specific URL (used during login setup)
      */
-    suspend fun reinitialize(context: Context) {
-        NetworkDetector.invalidateCache()
-        initializeAsync(context)
+    fun initializeWithUrl(context: Context, baseUrl: String) {
+        tokenManager = TokenManager(context)
+        setupRetrofit(baseUrl)
+    }
+    
+    /**
+     * Update the API URL and reinitialize
+     */
+    fun updateApiUrl(baseUrl: String) {
+        setupRetrofit(baseUrl)
+    }
+    
+    private fun setupRetrofit(baseUrl: String) {
+        if (currentBaseUrl != baseUrl || retrofit == null) {
+            currentBaseUrl = baseUrl
+            // Trust all certs for HTTPS URLs (self-signed certificates support)
+            val trustAllCerts = baseUrl.startsWith("https://")
+            retrofit = createRetrofit(baseUrl, trustAllCerts = trustAllCerts)
+            api = retrofit?.create(CookbookApi::class.java)
+            Log.i(TAG, "API client initialized with URL: $baseUrl")
+        }
     }
     
     /**
      * Get the API instance.
      */
     fun getApi(): CookbookApi {
-        return api ?: throw IllegalStateException("ApiClient not initialized. Call initialize() first.")
+        return api ?: throw IllegalStateException("ApiClient not initialized. Call initialize() first or configure API URL.")
     }
     
     /**
@@ -99,9 +88,9 @@ object ApiClient {
     fun getCurrentBaseUrl(): String? = currentBaseUrl
     
     /**
-     * Check if using internal network.
+     * Check if API is configured and ready
      */
-    fun isUsingInternalNetwork(): Boolean = NetworkDetector.isUsingInternalNetwork()
+    fun isConfigured(): Boolean = api != null && currentBaseUrl != null
     
     private fun createRetrofit(baseUrl: String, trustAllCerts: Boolean): Retrofit {
         val clientBuilder = OkHttpClient.Builder()
@@ -111,9 +100,9 @@ object ApiClient {
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(120, TimeUnit.SECONDS) // Longer for image uploads
         
-        // For internal network: Trust all certificates (Synology self-signed)
+        // For HTTPS: Trust all certificates (self-signed support)
         if (trustAllCerts) {
-            Log.w(TAG, "⚠️ Trusting all certificates for internal network")
+            Log.w(TAG, "⚠️ Trusting all certificates for HTTPS connection")
             configureTrustAllCertificates(clientBuilder)
         }
         
@@ -129,7 +118,7 @@ object ApiClient {
     
     /**
      * Configures OkHttp to trust all SSL certificates.
-     * ONLY used for internal network where Synology uses self-signed certs.
+     * Used for self-signed certificates.
      */
     private fun configureTrustAllCertificates(builder: OkHttpClient.Builder) {
         try {
@@ -145,7 +134,7 @@ object ApiClient {
             builder.sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
             builder.hostnameVerifier { _, _ -> true }
             
-            Log.d(TAG, "SSL trust-all configured for internal network")
+            Log.d(TAG, "SSL trust-all configured")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to configure trust-all SSL", e)
         }
@@ -176,13 +165,14 @@ object ApiClient {
     private fun createLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor { message ->
             // Truncate very long messages (base64 images)
-            val truncated = if (message.length > 1000) {
-                "${message.take(500)}... [truncated ${message.length - 500} chars]"
+            val truncated = if (message.length > 2000) {
+                "${message.take(1000)}... [truncated ${message.length - 1000} chars]"
             } else {
                 message
             }
             Log.d("OkHttp", truncated)
         }.apply {
+            // Use BODY for debugging meal plan issues
             level = if (BuildConfig.DEBUG) {
                 HttpLoggingInterceptor.Level.BODY
             } else {

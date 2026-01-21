@@ -28,8 +28,15 @@ class AuthRepository {
                 
                 Result.success(loginResponse)
             } else {
-                val errorBody = response.errorBody()?.string() ?: "Login fehlgeschlagen"
-                Result.failure(Exception(errorBody))
+                val errorBody = response.errorBody()?.string()?.takeIf { it.isNotBlank() }
+                val errorMessage = when {
+                    response.code() == 404 -> "Server not found. Please check the URL."
+                    response.code() == 401 -> "Invalid username or password"
+                    response.code() == 403 -> "Access denied"
+                    errorBody != null -> errorBody
+                    else -> "Login failed (Error ${response.code()})"
+                }
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)

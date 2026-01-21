@@ -1,119 +1,89 @@
 # Cookbook Android App
 
-Eine native Android-App als mobiles Frontend für die Cookbook-Webanwendung.
+A native Android app as mobile frontend for the Cookbook web application.
 
 ## Features
 
-- 🔐 **Authentifizierung**: Login mit Benutzername/Passwort oder Google Sign-In
-- 🔒 **2FA-Unterstützung**: Zwei-Faktor-Authentifizierung
-- 📖 **Rezeptliste**: Übersichtliche Darstellung aller Rezepte mit Filterung nach Kategorien
-- 🔍 **Suche**: Rezepte durchsuchen
-- 📝 **Rezepte erstellen/bearbeiten**: Neue Rezepte anlegen und bestehende bearbeiten
-- 🌐 **Rezept-Import**: Rezepte von URLs automatisch importieren
-- 📤 **Teilen**: Rezepte mit anderen teilen
-- 📅 **Wochenplaner**: Mahlzeiten für die Woche planen mit Zutatenliste
+- 🔐 **Authentication**: Login with username/password or Google Sign-In
+- 🔒 **2FA Support**: Two-factor authentication
+- 📖 **Recipe List**: Clear display of all recipes with category filtering
+- 🔍 **Search**: Search through recipes
+- 📝 **Create/Edit Recipes**: Create new recipes and edit existing ones
+- 🌐 **Recipe Import**: Automatically import recipes from URLs
+- 📤 **Share**: Share recipes with others
+- 📅 **Weekly Planner**: Plan meals for the week with ingredient list
+- ⚙️ **Server URL Configuration**: Configure your server URL at first login
 
-## Voraussetzungen
+## Prerequisites
 
-- Android Studio (Arctic Fox oder neuer)
+- Android Studio (Arctic Fox or newer)
 - Android SDK 26+ (Min SDK)
 - Android SDK 34 (Target/Compile SDK)
 - Kotlin 1.9+
-- Ein laufendes Cookbook-Backend
+- A running Cookbook backend
 
 ## Setup
 
-### 1. Repository klonen
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/your-username/cookbook-android.git
 cd cookbook-android
 ```
 
-### 2. Konfigurationsdatei erstellen
+### 2. Create Configuration File
 
-Die App benötigt eine `local.properties` Datei im Projektroot mit deinen Server-Einstellungen.
+The app requires a `local.properties` file in the project root.
 
-**Kopiere die Beispieldatei:**
+**Copy the example file:**
 
 ```bash
 cp local.properties.example local.properties
 ```
 
-**Bearbeite `local.properties` und trage deine Werte ein:**
+**Edit `local.properties` and enter your values:**
 
 ```properties
-# Android SDK (wird meist automatisch von Android Studio gesetzt)
+# Android SDK (usually set automatically by Android Studio)
 sdk.dir=/path/to/your/Android/Sdk
 
-# Google Sign-In Client ID (optional, für Google-Login)
+# Google Sign-In Client ID (optional, for Google login)
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-
-# API Server Konfiguration
-API_URL_INTERNAL=https://your-server.local:3003/api
-API_URL_EXTERNAL=https://cookbook.yourdomain.com/api
-INTERNAL_HOST=your-server.local
-INTERNAL_PORT=3003
 ```
 
-> ⚠️ **Wichtig**: Die `local.properties` Datei enthält sensible Daten und wird von Git ignoriert. Committe diese Datei niemals!
+> ⚠️ **Important**: The `local.properties` file contains sensitive data and is ignored by Git. Never commit this file!
 
-### 3. Google Sign-In konfigurieren (optional)
+### 3. Configure Google Sign-In (optional)
 
-Für Google Sign-In musst du eine Google Cloud Console OAuth Client ID erstellen:
+For Google Sign-In, you need to create a Google Cloud Console OAuth Client ID:
 
-1. Gehe zu [Google Cloud Console](https://console.cloud.google.com/)
-2. Erstelle ein neues Projekt oder wähle ein bestehendes
-3. Aktiviere die "Google Sign-In API"
-4. Gehe zu "Credentials" → "Create Credentials" → "OAuth Client ID"
-5. Erstelle eine **Web Application** Client ID (für das Backend)
-6. Erstelle eine **Android** Client ID:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the "Google Sign-In API"
+4. Go to "Credentials" → "Create Credentials" → "OAuth Client ID"
+5. Create a **Web Application** Client ID (for the backend)
+6. Create an **Android** Client ID:
    - Package Name: `com.cookbook.app`
-   - SHA-1 Fingerprint deines Debug-Keystores:
+   - SHA-1 fingerprint of your debug keystore:
      ```bash
      keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
      ```
-7. Trage die **Web Client ID** in `local.properties` ein:
+7. Enter the **Web Client ID** in `local.properties`:
    ```properties
    GOOGLE_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
    ```
 
-### 4. API Server Konfiguration
+### 4. Server URL Configuration
 
-Die App unterstützt automatische Netzwerkerkennung, um zwischen internem und externem Zugriff zu unterscheiden:
+The server URL is configured at runtime during the first app launch. When you start the app for the first time, you will be prompted to enter your Cookbook server API URL.
 
-| Einstellung | Beschreibung | Beispiel |
-|-------------|--------------|----------|
-| `API_URL_INTERNAL` | URL für Zugriff im lokalen Netzwerk | `https://192.168.1.100:3003/api` |
-| `API_URL_EXTERNAL` | URL für Zugriff über Internet | `https://cookbook.example.com/api` |
-| `INTERNAL_HOST` | Host für Netzwerk-Check | `192.168.1.100` |
-| `INTERNAL_PORT` | Port für Netzwerk-Check | `3003` |
+**Example URLs:**
+- `https://cookbook.example.com/api` - External access via reverse proxy
+- `https://192.168.1.100:3003/api` - Direct local network access
 
-**Wie funktioniert die Netzwerkerkennung?**
+The URL is stored in the app settings and persists across sessions. You can change it later by tapping the edit button on the login screen.
 
-Die App prüft beim Start, ob `INTERNAL_HOST:INTERNAL_PORT` erreichbar ist:
-- **Erreichbar** → Verwendet `API_URL_INTERNAL`
-- **Nicht erreichbar** → Verwendet `API_URL_EXTERNAL`
-
-**Typische Konfigurationen:**
-
-*Gleicher Server für intern/extern (Reverse Proxy):*
-```properties
-API_URL_INTERNAL=https://cookbook.example.com/api
-API_URL_EXTERNAL=https://cookbook.example.com/api
-INTERNAL_HOST=cookbook.example.com
-INTERNAL_PORT=443
-```
-
-*Separater interner Zugang:*
-```properties
-API_URL_INTERNAL=https://192.168.1.50:3003/api
-API_URL_EXTERNAL=https://cookbook.example.com/api
-INTERNAL_HOST=192.168.1.50
-INTERNAL_PORT=3003
-```
-
-### 5. Build und Run
+### 5. Build and Run
 
 **Via Gradle:**
 ```bash
@@ -121,88 +91,91 @@ INTERNAL_PORT=3003
 ```
 
 **Via Android Studio:**
-- Öffne das Projekt in Android Studio
+- Open the project in Android Studio
 - Run → Run 'app'
 
-## Projektstruktur
+## Project Structure
 
 ```
 app/src/main/
 ├── java/com/cookbook/app/
-│   ├── CookbookApplication.kt      # Application-Klasse
+│   ├── CookbookApplication.kt      # Application class
 │   ├── data/
-│   │   ├── api/                    # Retrofit API Definitionen
-│   │   ├── auth/                   # Token-Management
-│   │   ├── models/                 # Datenmodelle
-│   │   └── repository/             # Repository-Pattern
+│   │   ├── api/                    # Retrofit API definitions
+│   │   ├── auth/                   # Token management
+│   │   ├── models/                 # Data models
+│   │   └── repository/             # Repository pattern
 │   ├── ui/
-│   │   ├── adapter/                # RecyclerView Adapter
-│   │   ├── LoginActivity.kt        # Login-Screen
-│   │   ├── MainActivity.kt         # Rezeptliste
-│   │   ├── RecipeDetailActivity.kt # Rezeptdetails
-│   │   ├── RecipeEditActivity.kt   # Rezept erstellen/bearbeiten
-│   │   ├── RecipeImportActivity.kt # Rezept importieren
-│   │   └── WeeklyPlannerActivity.kt # Wochenplaner
-│   └── util/                       # Hilfsfunktionen
+│   │   ├── adapter/                # RecyclerView adapters
+│   │   ├── LoginActivity.kt        # Login screen with server setup
+│   │   ├── MainActivity.kt         # Recipe list
+│   │   ├── RecipeDetailActivity.kt # Recipe details
+│   │   ├── RecipeEditActivity.kt   # Create/edit recipe
+│   │   ├── RecipeImportActivity.kt # Import recipe
+│   │   └── WeeklyPlannerActivity.kt # Weekly planner
+│   └── util/                       # Utility functions
 └── res/
-    ├── drawable/                   # Icons und Grafiken
-    ├── layout/                     # XML Layouts
-    ├── menu/                       # Menü-Definitionen
-    └── values/                     # Strings, Colors, Themes
+    ├── drawable/                   # Icons and graphics
+    ├── layout/                     # XML layouts
+    ├── menu/                       # Menu definitions
+    └── values/                     # Strings, colors, themes
 ```
 
-## API-Endpunkte
+## API Endpoints
 
-Die App kommuniziert mit dem Cookbook-Backend über folgende Endpunkte:
+The app communicates with the Cookbook backend through the following endpoints:
 
-### Authentifizierung
-- `POST /auth/login` - Login mit Benutzername/Passwort
-- `POST /auth/google` - Google Login
-- `GET /auth/me` - Aktueller Benutzer
+### Authentication
+- `POST /auth/login` - Login with username/password
+- `POST /auth/google` - Google login
+- `GET /auth/me` - Current user
 
-### Rezepte
-- `GET /recipes` - Alle Rezepte (paginiert)
-- `GET /recipes/:id` - Einzelnes Rezept
-- `POST /recipes` - Rezept erstellen
-- `PUT /recipes/:id` - Rezept aktualisieren
-- `DELETE /recipes/:id` - Rezept löschen
-- `POST /import` - Rezept von URL importieren
+### Recipes
+- `GET /recipes` - All recipes (paginated)
+- `GET /recipes/:id` - Single recipe
+- `POST /recipes` - Create recipe
+- `PUT /recipes/:id` - Update recipe
+- `DELETE /recipes/:id` - Delete recipe
+- `POST /import` - Import recipe from URL
 
-### Kategorien & Sammlungen
-- `GET /categories` - Alle Kategorien
-- `GET /collections` - Alle Sammlungen
+### Categories & Collections
+- `GET /categories` - All categories
+- `GET /collections` - All collections
 
-### Wochenplaner
-- `GET /mealplans/:weekStart` - Wochenplan abrufen
-- `PUT /mealplans/:weekStart/slots/:day/:mealType` - Mahlzeit setzen
-- `DELETE /mealplans/:weekStart/slots/:day/:mealType` - Mahlzeit entfernen
-- `POST /mealplans/:weekStart/sent-ingredients` - Zutaten als gesendet markieren
+### Weekly Planner
+- `GET /mealplans/:weekStart` - Get weekly plan
+- `PUT /mealplans/:weekStart/slots/:day/:mealType` - Set meal
+- `DELETE /mealplans/:weekStart/slots/:day/:mealType` - Remove meal
+- `POST /mealplans/:weekStart/sent-ingredients` - Mark ingredients as sent
 
-## Technologien
+## Technologies
 
-- **Kotlin** - Programmiersprache
-- **Retrofit** - HTTP Client
-- **Coil** - Bildladung
-- **Material Design 3** - UI-Komponenten
-- **DataStore** - Persistente Datenspeicherung
-- **Coroutines** - Asynchrone Programmierung
+- **Kotlin** - Programming language
+- **Retrofit** - HTTP client
+- **Coil** - Image loading
+- **Material Design 3** - UI components
+- **DataStore** - Persistent data storage
+- **Coroutines** - Asynchronous programming
 - **Google Credential Manager** - Google Sign-In
 
 ## Troubleshooting
 
-### Build-Fehler: "local.properties not found"
-Stelle sicher, dass du `local.properties.example` zu `local.properties` kopiert und die Werte eingetragen hast.
+### Build error: "local.properties not found"
+Make sure you have copied `local.properties.example` to `local.properties` and filled in the values.
 
-### Google Sign-In funktioniert nicht
-- Überprüfe, ob die Web Client ID korrekt in `local.properties` eingetragen ist
-- Stelle sicher, dass der SHA-1 Fingerprint in der Google Cloud Console korrekt ist
-- Das Backend muss ebenfalls für Google Auth konfiguriert sein
+### Google Sign-In doesn't work
+- Check if the Web Client ID is correctly entered in `local.properties`
+- Make sure the SHA-1 fingerprint in Google Cloud Console is correct
+- The backend must also be configured for Google Auth
 
-### Verbindungsfehler
-- Überprüfe, ob die API-URLs in `local.properties` korrekt sind
-- Stelle sicher, dass das Backend läuft und erreichbar ist
-- Bei selbstsignierten Zertifikaten: SSL-Pinning beachten
+### Connection errors
+- Check if the API URL is correct (including `/api` at the end)
+- Make sure the backend is running and reachable
+- For self-signed certificates: the app accepts them automatically
 
-## Lizenz
+### Need to change server URL
+Tap the edit button (pencil icon) on the login screen to change the server URL.
 
-MIT License - siehe [LICENSE](LICENSE)
+## License
+
+MIT License - see [LICENSE](LICENSE)

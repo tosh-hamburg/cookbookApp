@@ -2,6 +2,7 @@ package com.cookbook.app.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
@@ -10,10 +11,13 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.cookbook.app.BuildConfig
 import com.cookbook.app.R
+import com.cookbook.app.data.api.ApiClient
 import com.cookbook.app.data.repository.AuthRepository
 import com.cookbook.app.databinding.ActivityLoginBinding
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -24,7 +28,7 @@ import java.security.MessageDigest
 import java.util.UUID
 
 /**
- * Login activity with Google Sign-In support
+ * Login activity with Google Sign-In support and server URL configuration
  */
 class LoginActivity : AppCompatActivity() {
     
@@ -43,16 +47,28 @@ class LoginActivity : AppCompatActivity() {
         
         credentialManager = CredentialManager.create(this)
         
-        // Load local background image (same as web app)
-        // Image file: res/drawable-nodpi/login_background.jpg
+        // Load local background image
         binding.ivBackground.setImageResource(R.drawable.login_background)
         binding.ivBackground.scaleType = ImageView.ScaleType.CENTER_CROP
         
+        // Initialize API client
+        ApiClient.initialize(this)
+        
         setupUI()
-        checkExistingLogin()
+        checkInitialState()
     }
     
     private fun setupUI() {
+        // Server URL save button
+        binding.btnSaveUrl.setOnClickListener {
+            saveServerUrl()
+        }
+        
+        // Change server button
+        binding.btnChangeServer.setOnClickListener {
+            showServerSetup()
+        }
+        
         // Login button
         binding.btnLogin.setOnClickListener {
             val username = binding.etUsername.text.toString().trim()
@@ -74,7 +90,7 @@ class LoginActivity : AppCompatActivity() {
             if (code.length == 6) {
                 submit2FACode(code)
             } else {
-                binding.et2FACode.error = "Bitte 6-stelligen Code eingeben"
+                binding.et2FACode.error = getString(R.string.field_required)
             }
         }
         
@@ -84,21 +100,102 @@ class LoginActivity : AppCompatActivity() {
         }
     }
     
-    private fun checkExistingLogin() {
-        if (authRepository.isLoggedIn()) {
-            // Verify token is still valid
-            lifecycleScope.launch {
-                setLoading(true)
-                val result = authRepository.getCurrentUser()
-                setLoading(false)
+    private fun checkInitialState() {
+        val tokenManager = ApiClient.getTokenManager()
+        
+        if (!tokenManager.isApiUrlConfigured()) {
+            // No server URL configured - show setup
+            showServerSetup()
+        } else {
+            // Server URL exists - show login form
+            showLoginForm()
+            
+            // Check if already logged in
+            if (authRepository.isLoggedIn()) {
+                verifyExistingLogin()
+            }
+        }
+    }
+    
+    private fun showServerSetup() {
+        binding.serverUrlContainer.visibility = View.VISIBLE
+        binding.loginFormContainer.visibility = View.GONE
+        binding.twoFactorContainer.visibility = View.GONE
+        
+        // Pre-fill with current URL if exists (remove /api suffix for display)
+        val currentUrl = ApiClient.getCurrentBaseUrl()
+        if (currentUrl != null) {
+            val displayUrl = currentUrl.removeSuffix("/api").removeSuffix("/")
+            binding.etServerUrl.setText(displayUrl)
+        }
+    }
+    
+    private fun showLoginForm() {
+        binding.serverUrlContainer.visibility = View.GONE
+        binding.loginFormContainer.visibility = View.VISIBLE
+        binding.twoFactorContainer.visibility = View.GONE
+        
+        // Show current server URL
+        val currentUrl = ApiClient.getCurrentBaseUrl()
+        if (currentUrl != null) {
+            binding.serverInfoContainer.visibility = View.VISIBLE
+            binding.tvServerUrl.text = currentUrl
+        } else {
+            binding.serverInfoContainer.visibility = View.GONE
+        }
+    }
+    
+    private fun saveServerUrl() {
+        var url = binding.etServerUrl.text.toString().trim()
+        
+        // Basic URL validation
+        if (url.isEmpty() || !url.startsWith("http")) {
+            binding.tilServerUrl.error = getString(R.string.invalid_url)
+            return
+        }
+        
+        // Remove trailing slash for consistency
+        url = url.trimEnd('/')
+        
+        // Automatically append /api if not present
+        if (!url.endsWith("/api")) {
+            url = "$url/api"
+        }
+        
+        binding.tilServerUrl.error = null
+        setLoading(true)
+        
+        // Test connection and save URL
+        lifecycleScope.launch {
+            try {
+                // Initialize API client with new URL
+                ApiClient.initializeWithUrl(this@LoginActivity, url)
                 
-                result.onSuccess {
-                    navigateToMain()
-                }.onFailure {
-                    // Token invalid, stay on login screen
-                    lifecycleScope.launch {
-                        authRepository.logout()
-                    }
+                // Save URL to settings
+                ApiClient.getTokenManager().saveApiUrl(url)
+                
+                setLoading(false)
+                showLoginForm()
+                
+            } catch (e: Exception) {
+                setLoading(false)
+                showError(getString(R.string.connection_error))
+            }
+        }
+    }
+    
+    private fun verifyExistingLogin() {
+        lifecycleScope.launch {
+            setLoading(true)
+            val result = authRepository.getCurrentUser()
+            setLoading(false)
+            
+            result.onSuccess {
+                navigateToMain()
+            }.onFailure {
+                // Token invalid, stay on login screen
+                lifecycleScope.launch {
+                    authRepository.logout()
                 }
             }
         }
@@ -143,16 +240,18 @@ class LoginActivity : AppCompatActivity() {
                         navigateToMain()
                     }
                     else -> {
-                        showError(response.message ?: "Login fehlgeschlagen")
+                        showError(response.message ?: "Login failed")
                     }
                 }
             }.onFailure { error ->
-                showError(error.message ?: "Login fehlgeschlagen")
+                showError(error.message ?: "Login failed")
             }
         }
     }
     
     private fun performGoogleSignIn() {
+        Log.d(TAG, "Starting Google Sign-In with Client ID: ${BuildConfig.GOOGLE_CLIENT_ID.take(20)}...")
+        
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
             .setServerClientId(BuildConfig.GOOGLE_CLIENT_ID)
@@ -172,11 +271,28 @@ class LoginActivity : AppCompatActivity() {
                     context = this@LoginActivity
                 )
                 handleGoogleSignInResult(result)
-            } catch (e: GetCredentialException) {
+            } catch (e: GetCredentialCancellationException) {
+                Log.d(TAG, "Google Sign-In cancelled by user")
                 setLoading(false)
-                showError("Google Sign-In fehlgeschlagen: ${e.message}")
+                // User cancelled, no error message needed
+            } catch (e: NoCredentialException) {
+                Log.e(TAG, "No Google credentials available", e)
+                setLoading(false)
+                showError(getString(R.string.google_signin_no_account))
+            } catch (e: GetCredentialException) {
+                Log.e(TAG, "Google Sign-In failed: ${e.type} - ${e.message}", e)
+                setLoading(false)
+                showError(getString(R.string.google_signin_failed))
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error during Google Sign-In", e)
+                setLoading(false)
+                showError("${getString(R.string.google_signin_failed)}: ${e.message}")
             }
         }
+    }
+    
+    companion object {
+        private const val TAG = "LoginActivity"
     }
     
     private fun handleGoogleSignInResult(result: GetCredentialResponse) {
@@ -206,22 +322,22 @@ class LoginActivity : AppCompatActivity() {
                                         navigateToMain()
                                     }
                                     else -> {
-                                        showError(response.message ?: "Google Login fehlgeschlagen")
+                                        showError(response.message ?: "Google Login failed")
                                     }
                                 }
                             }.onFailure { error ->
-                                showError(error.message ?: "Google Login fehlgeschlagen")
+                                showError(error.message ?: "Google Login failed")
                             }
                         }
                     } catch (e: GoogleIdTokenParsingException) {
                         setLoading(false)
-                        showError("Google Token konnte nicht verarbeitet werden")
+                        showError("Could not process Google token")
                     }
                 }
             }
             else -> {
                 setLoading(false)
-                showError("Unbekannter Credential-Typ")
+                showError("Unknown credential type")
             }
         }
     }
@@ -244,16 +360,17 @@ class LoginActivity : AppCompatActivity() {
                 if (response.token != null) {
                     navigateToMain()
                 } else {
-                    showError(response.message ?: "2FA-Verifizierung fehlgeschlagen")
+                    showError(response.message ?: "2FA verification failed")
                 }
             }.onFailure { error ->
-                showError(error.message ?: "2FA-Verifizierung fehlgeschlagen")
+                showError(error.message ?: "2FA verification failed")
             }
         }
     }
     
     private fun show2FAInput() {
         binding.loginFormContainer.visibility = View.GONE
+        binding.serverUrlContainer.visibility = View.GONE
         binding.twoFactorContainer.visibility = View.VISIBLE
         binding.et2FACode.text?.clear()
         binding.et2FACode.requestFocus()
@@ -271,6 +388,7 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.isEnabled = !isLoading
         binding.btnGoogleSignIn.isEnabled = !isLoading
         binding.btnSubmit2FA.isEnabled = !isLoading
+        binding.btnSaveUrl.isEnabled = !isLoading
     }
     
     private fun showError(message: String) {

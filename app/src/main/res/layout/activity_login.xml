@@ -82,6 +82,65 @@
                         android:textColor="#B0FFFFFF"
                         android:layout_marginTop="4dp" />
 
+                    <!-- Server URL Container (shown on first setup) -->
+                    <LinearLayout
+                        android:id="@+id/serverUrlContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="24dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/server_setup_title"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/server_setup_description"
+                            android:textColor="#B0FFFFFF"
+                            android:textSize="14sp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilServerUrl"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:hint="@string/server_url_hint"
+                            app:startIconDrawable="@drawable/ic_link"
+                            app:startIconTint="@android:color/white"
+                            app:hintTextColor="@android:color/white"
+                            app:boxStrokeColor="@android:color/white"
+                            android:textColorHint="#80FFFFFF">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etServerUrl"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textUri"
+                                android:textColor="@android:color/white"
+                                android:imeOptions="actionNext" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSaveUrl"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/continue_button"
+                            android:textAllCaps="false"
+                            app:cornerRadius="12dp" />
+
+                    </LinearLayout>
+
                     <!-- Login Form Container -->
                     <LinearLayout
                         android:id="@+id/loginFormContainer"
@@ -89,6 +148,38 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_marginTop="24dp">
+
+                        <!-- Current server URL display -->
+                        <LinearLayout
+                            android:id="@+id/serverInfoContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="16dp"
+                            android:padding="12dp"
+                            android:background="@drawable/server_info_background">
+
+                            <TextView
+                                android:id="@+id/tvServerUrl"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textColor="#B0FFFFFF"
+                                android:textSize="12sp"
+                                android:ellipsize="middle"
+                                android:singleLine="true" />
+
+                            <ImageButton
+                                android:id="@+id/btnChangeServer"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:src="@drawable/ic_edit"
+                                android:contentDescription="@string/change_server"
+                                app:tint="#B0FFFFFF" />
+
+                        </LinearLayout>
 
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/tilUsername"
