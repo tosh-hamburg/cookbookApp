@@ -155,6 +155,8 @@ class AddToWeekPlannerBottomSheet : BottomSheetDialogFragment() {
     }
     
     private fun updateWeekDisplay() {
+        // Update weekPlan with new currentWeekStart
+        weekPlan = WeekPlan.createEmpty(currentWeekStart)
         updateWeekHeader()
         loadMealPlanData()
     }
