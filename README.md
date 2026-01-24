@@ -2,6 +2,28 @@
 
 A native Android app as mobile frontend for the Cookbook web application.
 
+## 📱 Screenshots
+
+<details>
+<summary>Show Screenshots</summary>
+
+### Recipe List
+Browse through all your recipes with category and collection filters. The clean card-based grid layout provides quick access to all your favorite dishes.
+
+![Recipe List](screenshots/android-recipe-list.png)
+
+### Recipe Detail
+View full recipe details with an image carousel, ingredients with serving calculator, step-by-step instructions, and quick actions to add to weekly planner or edit.
+
+![Recipe Detail](screenshots/android-recipe-detail.png)
+
+### Weekly Planner
+Plan your meals for the entire week with breakfast, lunch, and dinner slots for each day. Adjust servings per meal and generate an aggregated shopping list.
+
+![Weekly Planner](screenshots/android-weekly-planner.png)
+
+</details>
+
 ## Features
 
 - 🔐 **Authentication**: Login with username/password or Google Sign-In
