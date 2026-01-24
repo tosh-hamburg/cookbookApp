@@ -327,6 +327,10 @@ class RecipeDetailActivity : AppCompatActivity() {
                 showManageCollections()
                 true
             }
+            R.id.action_add_to_planner -> {
+                showAddToWeekPlanner()
+                true
+            }
             R.id.action_gemini -> {
                 sendToGemini()
                 true
@@ -351,6 +355,17 @@ class RecipeDetailActivity : AppCompatActivity() {
                 loadRecipe()
             }
             bottomSheet.show(supportFragmentManager, "ManageCollections")
+        }
+    }
+    
+    private fun showAddToWeekPlanner() {
+        currentRecipe?.let { recipe ->
+            val bottomSheet = AddToWeekPlannerBottomSheet.newInstance(recipe)
+            bottomSheet.onRecipeAdded = {
+                // Recipe was successfully added to week planner
+                // No need to reload recipe, just show success message
+            }
+            bottomSheet.show(supportFragmentManager, "AddToWeekPlanner")
         }
     }
     

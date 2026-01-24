@@ -94,6 +94,13 @@
     <string name="delete_recipe_confirm">Möchtest du dieses Rezept wirklich löschen?</string>
     <string name="manage_collections">Sammlungen</string>
     <string name="send_to_gemini">An Gemini senden</string>
+    <string name="add_to_week_planner">Zum Wochenplaner</string>
+    <string name="add_to_week_planner_title">Zum Wochenplaner hinzufügen</string>
+    <string name="add_to_week_planner_description">Wählen Sie einen Tag und eine Mahlzeit aus, um das Rezept hinzuzufügen.</string>
+    <string name="select_day_and_meal">Tag und Mahlzeit auswählen</string>
+    <string name="add_recipe_to_slot">Rezept hinzufügen</string>
+    <string name="recipe_added_to_planner">Rezept zum Wochenplaner hinzugefügt</string>
+    <string name="error_adding_to_planner">Fehler beim Hinzufügen zum Wochenplaner</string>
     <string name="gemini_prompt_copied">Prompt kopiert!</string>
     <string name="gemini_prompt_description">Der Prompt wurde in die Zwischenablage kopiert. Möchtest du jetzt Gemini öffnen, um ihn einzufügen?</string>
     <string name="open_gemini">Gemini öffnen</string>

@@ -15,6 +15,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_add_to_planner"
+        android:icon="@drawable/ic_calendar"
+        android:title="@string/add_to_week_planner"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/action_gemini"
         android:icon="@drawable/ic_gemini"
         android:title="@string/send_to_gemini"
