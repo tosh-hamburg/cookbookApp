@@ -127,8 +127,8 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnPreviousWeek"
                         style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:insetLeft="0dp"
                         android:insetTop="0dp"
                         android:insetRight="0dp"
@@ -137,33 +137,35 @@
                         app:icon="@drawable/ic_chevron_left"
                         app:iconGravity="textStart"
                         app:iconPadding="0dp"
-                        app:iconSize="18dp" />
+                        app:iconSize="24dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnCurrentWeek"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
                         android:layout_marginStart="4dp"
                         android:layout_marginEnd="4dp"
                         android:text="@string/this_week"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnNextUpcomingWeek"
                         style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
                         android:layout_marginStart="4dp"
                         android:layout_marginEnd="4dp"
                         android:text="@string/coming_week"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnNextWeek"
                         style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:insetLeft="0dp"
                         android:insetTop="0dp"
                         android:insetRight="0dp"
@@ -172,7 +174,7 @@
                         app:icon="@drawable/ic_chevron_right"
                         app:iconGravity="textStart"
                         app:iconPadding="0dp"
-                        app:iconSize="18dp" />
+                        app:iconSize="24dp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

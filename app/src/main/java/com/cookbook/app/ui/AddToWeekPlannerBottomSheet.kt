@@ -94,10 +94,10 @@ class AddToWeekPlannerBottomSheet : BottomSheetDialogFragment() {
     
     override fun onStart() {
         super.onStart()
-        // Set dialog width to 60% of screen width
+        // Set dialog width to 90% of screen width for better readability
         dialog?.window?.let { window ->
             val displayMetrics = resources.displayMetrics
-            val width = (displayMetrics.widthPixels * 0.6).toInt()
+            val width = (displayMetrics.widthPixels * 0.9).toInt()
             window.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
     }
@@ -143,7 +143,7 @@ class AddToWeekPlannerBottomSheet : BottomSheetDialogFragment() {
     
     private fun setupRecyclerView() {
         binding.recyclerDayMealSlots.apply {
-            layoutManager = GridLayoutManager(requireContext(), 3)
+            layoutManager = GridLayoutManager(requireContext(), 2) // 2 columns for better readability
             adapter = DayMealAdapter()
         }
     }

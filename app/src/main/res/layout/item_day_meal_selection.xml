@@ -23,10 +23,10 @@
             android:id="@+id/textDayName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceCaption"
+            android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="2dp" />
 
         <!-- Day Date -->
         <TextView
@@ -48,17 +48,17 @@
             <LinearLayout
                 android:id="@+id/slotBreakfast"
                 android:layout_width="match_parent"
-                android:layout_height="32dp"
+                android:layout_height="40dp"
                 android:orientation="horizontal"
-                android:gravity="center"
-                android:padding="4dp"
+                android:gravity="center_vertical"
+                android:padding="8dp"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_breakfast"
                     android:contentDescription="@string/breakfast"
                     app:tint="?attr/colorOnSurfaceVariant" />
@@ -68,15 +68,15 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="4dp"
+                    android:layout_marginStart="8dp"
                     android:text="@string/breakfast"
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:textSize="10sp" />
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textSize="14sp" />
 
                 <ImageView
                     android:id="@+id/checkBreakfast"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_check"
                     android:contentDescription="@string/breakfast"
                     android:visibility="gone"
@@ -87,17 +87,17 @@
             <LinearLayout
                 android:id="@+id/slotLunch"
                 android:layout_width="match_parent"
-                android:layout_height="32dp"
+                android:layout_height="40dp"
                 android:orientation="horizontal"
-                android:gravity="center"
-                android:padding="4dp"
+                android:gravity="center_vertical"
+                android:padding="8dp"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_lunch"
                     android:contentDescription="@string/lunch"
                     app:tint="?attr/colorOnSurfaceVariant" />
@@ -107,15 +107,15 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="4dp"
+                    android:layout_marginStart="8dp"
                     android:text="@string/lunch"
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:textSize="10sp" />
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textSize="14sp" />
 
                 <ImageView
                     android:id="@+id/checkLunch"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_check"
                     android:contentDescription="@string/lunch"
                     android:visibility="gone"
@@ -126,17 +126,17 @@
             <LinearLayout
                 android:id="@+id/slotDinner"
                 android:layout_width="match_parent"
-                android:layout_height="32dp"
+                android:layout_height="40dp"
                 android:orientation="horizontal"
-                android:gravity="center"
-                android:padding="4dp"
+                android:gravity="center_vertical"
+                android:padding="8dp"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_dinner"
                     android:contentDescription="@string/dinner"
                     app:tint="?attr/colorOnSurfaceVariant" />
@@ -146,15 +146,15 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="4dp"
+                    android:layout_marginStart="8dp"
                     android:text="@string/dinner"
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:textSize="10sp" />
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textSize="14sp" />
 
                 <ImageView
                     android:id="@+id/checkDinner"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_check"
                     android:contentDescription="@string/dinner"
                     android:visibility="gone"
