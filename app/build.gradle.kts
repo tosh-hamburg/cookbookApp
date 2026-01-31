@@ -36,6 +36,19 @@ android {
         buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${getLocalProperty("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID")}\"")
     }
 
+    // Signing configuration loaded from local.properties
+    signingConfigs {
+        create("release") {
+            val keystorePath = getLocalProperty("KEYSTORE_FILE", "")
+            if (keystorePath.isNotEmpty()) {
+                storeFile = file(keystorePath)
+                storePassword = getLocalProperty("KEYSTORE_PASSWORD", "")
+                keyAlias = getLocalProperty("KEY_ALIAS", "")
+                keyPassword = getLocalProperty("KEY_PASSWORD", "")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -43,6 +56,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Use signing config if keystore is configured
+            val keystorePath = getLocalProperty("KEYSTORE_FILE", "")
+            if (keystorePath.isNotEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     

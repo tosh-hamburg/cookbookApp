@@ -38,54 +38,68 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- Collection Filter Chips -->
-            <HorizontalScrollView
-                android:id="@+id/scrollViewCollections"
+            <!-- Compact Filter Bar -->
+            <LinearLayout
+                android:id="@+id/filterBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:paddingTop="8dp"
-                android:visibility="gone">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:background="@color/surface">
 
-                <LinearLayout
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_filter"
+                    app:tint="@color/text_secondary"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="@string/filter" />
+
+                <!-- Category Filter Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFilterCategory"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp">
+                    android:layout_height="36dp"
+                    android:text="@string/all_categories"
+                    android:textSize="13sp"
+                    android:layout_marginEnd="8dp"
+                    app:icon="@drawable/ic_category"
+                    app:iconSize="16dp"
+                    app:cornerRadius="18dp" />
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_collections"
-                        app:tint="@color/text_secondary"
-                        android:layout_marginEnd="8dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chipGroupCollections"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true" />
-
-                </LinearLayout>
-
-            </HorizontalScrollView>
-
-            <!-- Category Filter Chips -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:paddingTop="4dp"
-                android:paddingBottom="8dp">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chipGroupCategories"
+                <!-- Collection Filter Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFilterCollections"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="16dp"
-                    app:singleSelection="true" />
+                    android:layout_height="36dp"
+                    android:text="@string/collections"
+                    android:textSize="13sp"
+                    android:layout_marginEnd="8dp"
+                    app:icon="@drawable/ic_collections"
+                    app:iconSize="16dp"
+                    app:cornerRadius="18dp" />
 
-            </HorizontalScrollView>
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Clear Filters Button (visible when filters active) -->
+                <ImageButton
+                    android:id="@+id/btnClearFilters"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_close"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/clear_filters"
+                    android:visibility="gone"
+                    app:tint="@color/text_secondary" />
+
+            </LinearLayout>
 
             <FrameLayout
                 android:layout_width="match_parent"

@@ -44,6 +44,20 @@
     <string name="recipes_count">%d recipes</string>
     <string name="filter_by_collection">Filter by collection</string>
     
+    <!-- Filters -->
+    <string name="filter">Filter</string>
+    <string name="filters">Filters</string>
+    <string name="select_collections">Select Collections</string>
+    <string name="select_categories">Select Category</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
+    <string name="apply">Apply</string>
+    <string name="no_categories">No categories available</string>
+    <string name="all_categories">All Categories</string>
+    <string name="selected_count">%d selected</string>
+    <string name="filter_active">Filter active</string>
+    <string name="clear_filters">Clear filters</string>
+    
     <!-- Recipe Detail -->
     <string name="ingredients">Ingredients</string>
     <string name="ingredients_for">Ingredients for</string>
@@ -106,7 +120,6 @@
     <string name="open_gemini">Open Gemini</string>
     <string name="gemini_not_found">Could not open Gemini. Please open the Gemini app manually.</string>
     <string name="clipboard_error">Could not copy to clipboard</string>
-    <string name="select_collections">Select collections</string>
     <string name="recipe_added_to_collection">Recipe added to collection</string>
     <string name="recipe_removed_from_collection">Recipe removed from collection</string>
     <string name="error_updating_collection">Error updating collection</string>

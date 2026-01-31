@@ -22,17 +22,20 @@ class RecipeRepository {
     
     /**
      * Get paginated recipes with optional filters
+     * @param collectionIds List of collection IDs to filter by (optional, can select multiple)
      */
     suspend fun getRecipes(
         category: String? = null,
-        collection: String? = null,
+        collectionIds: List<String>? = null,
         search: String? = null,
         limit: Int = 20,
         offset: Int = 0
     ): Result<PaginatedRecipes> {
         return try {
-            Log.d(TAG, "getRecipes called: category=$category, collection=$collection, search=$search, limit=$limit, offset=$offset")
-            val response = api.getRecipes(category, collection, search, limit, offset)
+            // Convert list of collection IDs to comma-separated string
+            val collectionsParam = collectionIds?.takeIf { it.isNotEmpty() }?.joinToString(",")
+            Log.d(TAG, "getRecipes called: category=$category, collections=$collectionsParam, search=$search, limit=$limit, offset=$offset")
+            val response = api.getRecipes(category, collectionsParam, search, limit, offset)
             Log.d(TAG, "getRecipes response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
                 val paginatedRecipes = response.body()!!

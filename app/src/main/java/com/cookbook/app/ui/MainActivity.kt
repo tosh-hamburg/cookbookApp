@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,7 +23,6 @@ import com.cookbook.app.data.repository.AuthRepository
 import com.cookbook.app.data.repository.RecipeRepository
 import com.cookbook.app.databinding.ActivityMainBinding
 import com.cookbook.app.ui.adapter.RecipeAdapter
-import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 
 /**
@@ -37,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val authRepository by lazy { AuthRepository() }
     private val recipeRepository by lazy { RecipeRepository() }
+    private val credentialManager by lazy { CredentialManager.create(this) }
     private lateinit var recipeAdapter: RecipeAdapter
     
     // Pagination state
@@ -50,7 +52,7 @@ class MainActivity : AppCompatActivity() {
     private var categories: List<String> = emptyList()
     private var collections: List<CookbookCollection> = emptyList()
     private var selectedCategory: String? = null
-    private var selectedCollection: CookbookCollection? = null
+    private var selectedCollections: MutableSet<String> = mutableSetOf() // Set of collection IDs
     private var searchQuery: String = ""
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         setupSwipeRefresh()
         setupFab()
+        setupFilterButtons()
         
         loadData()
     }
@@ -101,7 +104,12 @@ class MainActivity : AppCompatActivity() {
     
     private fun updateToolbarSubtitle() {
         val user = authRepository.getCachedUser()
-        val collectionInfo = selectedCollection?.let { " • 📁 ${it.name}" } ?: ""
+        val collectionInfo = if (selectedCollections.isNotEmpty()) {
+            val selectedNames = collections
+                .filter { selectedCollections.contains(it.id) }
+                .map { it.name }
+            " • 📁 ${selectedNames.joinToString(", ")}"
+        } else ""
         supportActionBar?.subtitle = "${user?.displayName ?: getString(R.string.unknown)}$collectionInfo"
     }
     
@@ -178,7 +186,7 @@ class MainActivity : AppCompatActivity() {
             val result = recipeRepository.getCollections()
             result.onSuccess { loadedCollections ->
                 collections = loadedCollections
-                setupCollectionChips()
+                updateFilterButtonLabels()
             }
         }
     }
@@ -188,9 +196,123 @@ class MainActivity : AppCompatActivity() {
             val result = recipeRepository.getCategories()
             result.onSuccess { loadedCategories ->
                 categories = loadedCategories
-                setupCategoryChips()
+                updateFilterButtonLabels()
             }
         }
+    }
+    
+    private fun setupFilterButtons() {
+        // Category filter button
+        binding.btnFilterCategory.setOnClickListener {
+            showCategoryFilterDialog()
+        }
+        
+        // Collections filter button
+        binding.btnFilterCollections.setOnClickListener {
+            showCollectionsFilterDialog()
+        }
+        
+        // Clear filters button
+        binding.btnClearFilters.setOnClickListener {
+            clearAllFilters()
+        }
+        
+        updateFilterButtonLabels()
+    }
+    
+    private fun showCategoryFilterDialog() {
+        // Create items for single-select category filter
+        val items = categories.map { category ->
+            FilterSelectionBottomSheet.FilterItem(
+                id = category,
+                name = category
+            )
+        }
+        
+        val selectedIds = if (selectedCategory != null) setOf(selectedCategory!!) else emptySet()
+        
+        val bottomSheet = FilterSelectionBottomSheet.newInstance(
+            title = getString(R.string.select_categories),
+            items = items,
+            selectedIds = selectedIds,
+            emptyIcon = "🏷️",
+            emptyMessage = getString(R.string.no_categories),
+            showCounts = false
+        )
+        
+        bottomSheet.onSelectionApplied = { newSelection ->
+            // Single selection for category - take first or null
+            selectedCategory = newSelection.firstOrNull()
+            updateFilterButtonLabels()
+            updateToolbarSubtitle()
+            resetAndLoadRecipes()
+        }
+        
+        bottomSheet.show(supportFragmentManager, "categoryFilter")
+    }
+    
+    private fun showCollectionsFilterDialog() {
+        // Create items for multi-select collections filter
+        val items = collections.map { collection ->
+            FilterSelectionBottomSheet.FilterItem(
+                id = collection.id,
+                name = collection.name,
+                count = collection.recipeCount
+            )
+        }
+        
+        val bottomSheet = FilterSelectionBottomSheet.newInstance(
+            title = getString(R.string.select_collections),
+            items = items,
+            selectedIds = selectedCollections,
+            emptyIcon = "📚",
+            emptyMessage = getString(R.string.no_collections),
+            showCounts = true
+        )
+        
+        bottomSheet.onSelectionApplied = { newSelection ->
+            selectedCollections.clear()
+            selectedCollections.addAll(newSelection)
+            updateFilterButtonLabels()
+            updateToolbarSubtitle()
+            resetAndLoadRecipes()
+        }
+        
+        bottomSheet.show(supportFragmentManager, "collectionsFilter")
+    }
+    
+    private fun clearAllFilters() {
+        selectedCategory = null
+        selectedCollections.clear()
+        updateFilterButtonLabels()
+        updateToolbarSubtitle()
+        resetAndLoadRecipes()
+    }
+    
+    private fun updateFilterButtonLabels() {
+        // Update category button
+        binding.btnFilterCategory.text = selectedCategory ?: getString(R.string.all_categories)
+        
+        // Update collections button
+        val collectionsText = when {
+            selectedCollections.isEmpty() -> getString(R.string.collections)
+            selectedCollections.size == 1 -> {
+                collections.find { it.id == selectedCollections.first() }?.name ?: getString(R.string.collections)
+            }
+            else -> getString(R.string.selected_count, selectedCollections.size)
+        }
+        binding.btnFilterCollections.text = collectionsText
+        
+        // Show/hide clear button based on active filters
+        val hasActiveFilters = selectedCategory != null || selectedCollections.isNotEmpty()
+        binding.btnClearFilters.visibility = if (hasActiveFilters) View.VISIBLE else View.GONE
+        
+        // Highlight active filter buttons
+        val activeColor = getColor(R.color.primary)
+        val inactiveColor = getColor(R.color.text_secondary)
+        
+        binding.btnFilterCategory.setTextColor(if (selectedCategory != null) activeColor else inactiveColor)
+        binding.btnFilterCollections.setTextColor(if (selectedCollections.isNotEmpty()) activeColor else inactiveColor)
     }
     
     /**
@@ -227,7 +349,7 @@ class MainActivity : AppCompatActivity() {
             
             val result = recipeRepository.getRecipes(
                 category = selectedCategory,
-                collection = selectedCollection?.id,
+                collectionIds = selectedCollections.toList().ifEmpty { null },
                 search = searchQuery.ifEmpty { null },
                 limit = PAGE_SIZE,
                 offset = currentOffset
@@ -259,102 +381,6 @@ class MainActivity : AppCompatActivity() {
             }.onFailure { error ->
                 Log.e(TAG, "loadRecipes onFailure", error)
                 showError(error.message ?: "Fehler beim Laden der Rezepte")
-            }
-        }
-    }
-    
-    private fun setupCollectionChips() {
-        binding.chipGroupCollections.removeAllViews()
-        
-        if (collections.isEmpty()) {
-            binding.scrollViewCollections.visibility = View.GONE
-            return
-        }
-        
-        binding.scrollViewCollections.visibility = View.VISIBLE
-        
-        // "Alle" chip for collections
-        val allChip = Chip(this).apply {
-            text = getString(R.string.all_recipes)
-            isCheckable = true
-            isChecked = selectedCollection == null
-            setOnClickListener {
-                selectedCollection = null
-                updateCollectionChips()
-                updateToolbarSubtitle()
-                resetAndLoadRecipes()
-            }
-        }
-        binding.chipGroupCollections.addView(allChip)
-        
-        // Collection chips
-        collections.forEach { collection ->
-            val chip = Chip(this).apply {
-                text = "${collection.name} (${collection.recipeCount})"
-                isCheckable = true
-                isChecked = selectedCollection?.id == collection.id
-                setOnClickListener {
-                    selectedCollection = collection
-                    updateCollectionChips()
-                    updateToolbarSubtitle()
-                    resetAndLoadRecipes()
-                }
-            }
-            binding.chipGroupCollections.addView(chip)
-        }
-    }
-    
-    private fun updateCollectionChips() {
-        for (i in 0 until binding.chipGroupCollections.childCount) {
-            val chip = binding.chipGroupCollections.getChildAt(i) as? Chip
-            chip?.isChecked = when {
-                i == 0 -> selectedCollection == null
-                else -> {
-                    val collectionName = collections.getOrNull(i - 1)?.name
-                    chip?.text?.startsWith(collectionName ?: "") == true && selectedCollection?.name == collectionName
-                }
-            }
-        }
-    }
-    
-    private fun setupCategoryChips() {
-        binding.chipGroupCategories.removeAllViews()
-        
-        // "Alle" chip
-        val allChip = Chip(this).apply {
-            text = "Alle"
-            isCheckable = true
-            isChecked = selectedCategory == null
-            setOnClickListener {
-                selectedCategory = null
-                updateCategoryChips()
-                resetAndLoadRecipes()
-            }
-        }
-        binding.chipGroupCategories.addView(allChip)
-        
-        // Category chips
-        categories.forEach { category ->
-            val chip = Chip(this).apply {
-                text = category
-                isCheckable = true
-                isChecked = selectedCategory == category
-                setOnClickListener {
-                    selectedCategory = category
-                    updateCategoryChips()
-                    resetAndLoadRecipes()
-                }
-            }
-            binding.chipGroupCategories.addView(chip)
-        }
-    }
-    
-    private fun updateCategoryChips() {
-        for (i in 0 until binding.chipGroupCategories.childCount) {
-            val chip = binding.chipGroupCategories.getChildAt(i) as? Chip
-            chip?.isChecked = when {
-                i == 0 -> selectedCategory == null
-                else -> chip?.text == selectedCategory
             }
         }
     }
@@ -452,7 +478,18 @@ class MainActivity : AppCompatActivity() {
             .setMessage(R.string.logout_confirmation)
             .setPositiveButton(R.string.yes) { _, _ ->
                 lifecycleScope.launch {
+                    // Clear app authentication state
                     authRepository.logout()
+                    
+                    // Clear Google Sign-In credential state to allow fresh sign-in
+                    try {
+                        credentialManager.clearCredentialState(ClearCredentialStateRequest())
+                        Log.d(TAG, "Google credential state cleared on logout")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Could not clear credential state: ${e.message}")
+                        // Continue anyway, not critical for logout
+                    }
+                    
                     navigateToLogin()
                 }
             }

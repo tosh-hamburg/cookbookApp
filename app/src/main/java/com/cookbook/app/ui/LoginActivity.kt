@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -252,20 +253,30 @@ class LoginActivity : AppCompatActivity() {
     private fun performGoogleSignIn() {
         Log.d(TAG, "Starting Google Sign-In with Client ID: ${BuildConfig.GOOGLE_CLIENT_ID.take(20)}...")
         
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(BuildConfig.GOOGLE_CLIENT_ID)
-            .setNonce(generateNonce())
-            .build()
-        
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-        
         lifecycleScope.launch {
             setLoading(true)
             
             try {
+                // Clear any stale credential state first to ensure fresh sign-in
+                try {
+                    credentialManager.clearCredentialState(ClearCredentialStateRequest())
+                    Log.d(TAG, "Cleared credential state before sign-in")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not clear credential state: ${e.message}")
+                    // Continue anyway, this is not critical
+                }
+                
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(BuildConfig.GOOGLE_CLIENT_ID)
+                    .setAutoSelectEnabled(false) // Always show account picker
+                    .setNonce(generateNonce())
+                    .build()
+                
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+                
                 val result = credentialManager.getCredential(
                     request = request,
                     context = this@LoginActivity

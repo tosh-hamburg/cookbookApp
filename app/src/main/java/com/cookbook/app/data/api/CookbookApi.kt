@@ -39,7 +39,7 @@ interface CookbookApi {
     @GET("recipes")
     suspend fun getRecipes(
         @Query("category") category: String? = null,
-        @Query("collection") collection: String? = null,
+        @Query("collections") collections: String? = null,
         @Query("search") search: String? = null,
         @Query("limit") limit: Int = 20,
         @Query("offset") offset: Int = 0
