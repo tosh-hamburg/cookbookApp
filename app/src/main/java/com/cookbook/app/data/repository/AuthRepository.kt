@@ -69,6 +69,27 @@ class AuthRepository {
     }
     
     /**
+     * Refresh the authentication token
+     */
+    suspend fun refreshToken(): Result<LoginResponse> {
+        return try {
+            val response = api.refreshToken()
+            if (response.isSuccessful) {
+                val loginResponse = response.body()!!
+                if (loginResponse.token != null && loginResponse.user != null) {
+                    tokenManager.saveToken(loginResponse.token)
+                    tokenManager.saveUser(loginResponse.user)
+                }
+                Result.success(loginResponse)
+            } else {
+                Result.failure(Exception("Token refresh failed (${response.code()})"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Get current user from API
      */
     suspend fun getCurrentUser(): Result<User> {

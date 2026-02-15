@@ -22,6 +22,7 @@ import com.cookbook.app.data.api.ApiClient
 import com.cookbook.app.data.repository.AuthRepository
 import com.cookbook.app.databinding.ActivityLoginBinding
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import kotlinx.coroutines.launch
@@ -188,16 +189,27 @@ class LoginActivity : AppCompatActivity() {
     private fun verifyExistingLogin() {
         lifecycleScope.launch {
             setLoading(true)
-            val result = authRepository.getCurrentUser()
+
+            // Try to get current user; if that fails, try refreshing the token first
+            var result = authRepository.getCurrentUser()
+
+            if (result.isFailure) {
+                val refreshResult = authRepository.refreshToken()
+                if (refreshResult.isSuccess) {
+                    result = authRepository.getCurrentUser()
+                }
+            } else {
+                // Token is still valid - proactively refresh for a fresh expiration
+                authRepository.refreshToken()
+            }
+
             setLoading(false)
-            
+
             result.onSuccess {
                 navigateToMain()
             }.onFailure {
-                // Token invalid, stay on login screen
-                lifecycleScope.launch {
-                    authRepository.logout()
-                }
+                // Token invalid even after refresh, stay on login screen
+                authRepository.logout()
             }
         }
     }
@@ -263,31 +275,28 @@ class LoginActivity : AppCompatActivity() {
                     Log.d(TAG, "Cleared credential state before sign-in")
                 } catch (e: Exception) {
                     Log.w(TAG, "Could not clear credential state: ${e.message}")
-                    // Continue anyway, this is not critical
                 }
                 
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(BuildConfig.GOOGLE_CLIENT_ID)
-                    .setAutoSelectEnabled(false) // Always show account picker
-                    .setNonce(generateNonce())
-                    .build()
+                // Try primary method: GetGoogleIdOption
+                try {
+                    val result = tryGoogleIdOption()
+                    handleGoogleSignInResult(result)
+                    return@launch
+                } catch (e: NoCredentialException) {
+                    Log.w(TAG, "GetGoogleIdOption failed with NoCredentialException, trying fallback...")
+                    // Fall through to try fallback method
+                }
                 
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
-                
-                val result = credentialManager.getCredential(
-                    request = request,
-                    context = this@LoginActivity
-                )
+                // Fallback: Use Sign-In with Google button flow
+                val result = trySignInWithGoogleOption()
                 handleGoogleSignInResult(result)
+                
             } catch (e: GetCredentialCancellationException) {
                 Log.d(TAG, "Google Sign-In cancelled by user")
                 setLoading(false)
                 // User cancelled, no error message needed
             } catch (e: NoCredentialException) {
-                Log.e(TAG, "No Google credentials available", e)
+                Log.e(TAG, "No Google credentials available (both methods failed)", e)
                 setLoading(false)
                 showError(getString(R.string.google_signin_no_account))
             } catch (e: GetCredentialException) {
@@ -300,6 +309,50 @@ class LoginActivity : AppCompatActivity() {
                 showError("${getString(R.string.google_signin_failed)}: ${e.message}")
             }
         }
+    }
+    
+    /**
+     * Primary Google Sign-In method using GetGoogleIdOption
+     */
+    private suspend fun tryGoogleIdOption(): GetCredentialResponse {
+        Log.d(TAG, "Trying GetGoogleIdOption...")
+        
+        val googleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(BuildConfig.GOOGLE_CLIENT_ID)
+            .setAutoSelectEnabled(false)
+            .setNonce(generateNonce())
+            .build()
+        
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+        
+        return credentialManager.getCredential(
+            request = request,
+            context = this@LoginActivity
+        )
+    }
+    
+    /**
+     * Fallback Google Sign-In method using GetSignInWithGoogleOption
+     * This shows the traditional "Sign in with Google" button flow
+     */
+    private suspend fun trySignInWithGoogleOption(): GetCredentialResponse {
+        Log.d(TAG, "Trying GetSignInWithGoogleOption (fallback)...")
+        
+        val signInOption = GetSignInWithGoogleOption.Builder(BuildConfig.GOOGLE_CLIENT_ID)
+            .setNonce(generateNonce())
+            .build()
+        
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(signInOption)
+            .build()
+        
+        return credentialManager.getCredential(
+            request = request,
+            context = this@LoginActivity
+        )
     }
     
     companion object {

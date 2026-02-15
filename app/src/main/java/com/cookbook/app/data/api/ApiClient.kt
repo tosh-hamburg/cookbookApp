@@ -4,8 +4,14 @@ import android.content.Context
 import android.util.Log
 import com.cookbook.app.BuildConfig
 import com.cookbook.app.data.auth.TokenManager
+import com.cookbook.app.data.models.LoginResponse
+import com.google.gson.Gson
 import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -93,8 +99,10 @@ object ApiClient {
     fun isConfigured(): Boolean = api != null && currentBaseUrl != null
     
     private fun createRetrofit(baseUrl: String, trustAllCerts: Boolean): Retrofit {
+        val normalizedUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         val clientBuilder = OkHttpClient.Builder()
             .addInterceptor(createAuthInterceptor())
+            .addInterceptor(createTokenRefreshInterceptor(normalizedUrl))
             .addInterceptor(createLoggingInterceptor())
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
@@ -105,9 +113,6 @@ object ApiClient {
             Log.w(TAG, "⚠️ Trusting all certificates for HTTPS connection")
             configureTrustAllCertificates(clientBuilder)
         }
-        
-        // Ensure URL ends with /
-        val normalizedUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         
         return Retrofit.Builder()
             .baseUrl(normalizedUrl)
@@ -162,6 +167,80 @@ object ApiClient {
         }
     }
     
+    private val refreshLock = Any()
+    @Volatile private var isRefreshing = false
+
+    private fun createTokenRefreshInterceptor(baseUrl: String): Interceptor {
+        return Interceptor { chain ->
+            val originalRequest = chain.request()
+            val response = chain.proceed(originalRequest)
+
+            // Only attempt refresh on 401/403, skip for auth endpoints
+            val path = originalRequest.url.encodedPath
+            if ((response.code == 401 || response.code == 403) &&
+                !path.contains("auth/login") &&
+                !path.contains("auth/google") &&
+                !path.contains("auth/refresh")
+            ) {
+                val token = tokenManager?.getTokenSync()
+                if (token != null) {
+                    synchronized(refreshLock) {
+                        // Double-check: another thread may have refreshed already
+                        val currentToken = tokenManager?.getTokenSync()
+                        if (currentToken != null && currentToken == token && !isRefreshing) {
+                            isRefreshing = true
+                            try {
+                                val refreshRequest = Request.Builder()
+                                    .url("${baseUrl}auth/refresh")
+                                    .post("{}".toRequestBody("application/json".toMediaType()))
+                                    .header("Authorization", "Bearer $token")
+                                    .build()
+
+                                val refreshClientBuilder = OkHttpClient.Builder()
+                                    .connectTimeout(10, TimeUnit.SECONDS)
+                                    .readTimeout(10, TimeUnit.SECONDS)
+                                if (baseUrl.startsWith("https://")) {
+                                    configureTrustAllCertificates(refreshClientBuilder)
+                                }
+                                val refreshClient = refreshClientBuilder.build()
+
+                                val refreshResponse = refreshClient.newCall(refreshRequest).execute()
+                                if (refreshResponse.isSuccessful) {
+                                    val body = refreshResponse.body?.string()
+                                    val loginResponse = Gson().fromJson(body, LoginResponse::class.java)
+                                    if (loginResponse?.token != null) {
+                                        kotlinx.coroutines.runBlocking {
+                                            tokenManager?.saveToken(loginResponse.token)
+                                            loginResponse.user?.let { tokenManager?.saveUser(it) }
+                                        }
+                                        Log.i(TAG, "Token refreshed successfully")
+                                    }
+                                } else {
+                                    Log.w(TAG, "Token refresh failed: ${refreshResponse.code}")
+                                }
+                                refreshResponse.close()
+                            } finally {
+                                isRefreshing = false
+                            }
+                        }
+                    }
+
+                    // Retry original request with new token
+                    val newToken = tokenManager?.getTokenSync()
+                    if (newToken != null && newToken != token) {
+                        response.close()
+                        val retryRequest = originalRequest.newBuilder()
+                            .header("Authorization", "Bearer $newToken")
+                            .build()
+                        return@Interceptor chain.proceed(retryRequest)
+                    }
+                }
+            }
+
+            response
+        }
+    }
+
     private fun createLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor { message ->
             // Truncate very long messages (base64 images)

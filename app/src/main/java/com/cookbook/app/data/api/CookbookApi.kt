@@ -31,6 +31,9 @@ interface CookbookApi {
     @POST("auth/google")
     suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<LoginResponse>
     
+    @POST("auth/refresh")
+    suspend fun refreshToken(): Response<LoginResponse>
+
     @GET("auth/me")
     suspend fun getCurrentUser(): Response<User>
     
