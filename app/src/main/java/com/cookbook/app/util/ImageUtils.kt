@@ -20,7 +20,13 @@ import java.io.InputStream
 object ImageUtils {
     
     private const val TAG = "ImageUtils"
-    private const val DATA_URL_PREFIX = "data:image"
+    // Any data: URL, not just "data:image". Some image hosts (z. B. FAZ/declareme über
+    // den Rezept-Import) liefern Bilder mit Content-Type "application/octet-stream", die
+    // dann als "data:application/octet-stream;base64,…" gespeichert werden. Diese müssen
+    // ebenfalls als Base64 dekodiert werden — sonst landen sie bei Coil (kein data:-Fetcher)
+    // und bleiben leer. Die eigentlichen Bytes sind ein gültiges JPEG/PNG, daher reicht
+    // der reine "data:"-Check; decodeBase64Image ist mime-agnostisch.
+    private const val DATA_URL_PREFIX = "data:"
     private const val MAX_IMAGE_SIZE = 1024 // Max dimension for uploaded images
     private const val JPEG_QUALITY = 80 // JPEG compression quality
     private const val MAX_BASE64_SIZE_BYTES = 5 * 1024 * 1024 // 5MB max for base64 string
