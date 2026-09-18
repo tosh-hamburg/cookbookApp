@@ -283,7 +283,7 @@ class LoginActivity : AppCompatActivity() {
                     handleGoogleSignInResult(result)
                     return@launch
                 } catch (e: NoCredentialException) {
-                    Log.w(TAG, "GetGoogleIdOption failed with NoCredentialException, trying fallback...")
+                    Log.w(TAG, "GetGoogleIdOption failed: type=${e.type}, message=${e.message} - trying fallback...")
                     // Fall through to try fallback method
                 }
                 
@@ -292,7 +292,11 @@ class LoginActivity : AppCompatActivity() {
                 handleGoogleSignInResult(result)
                 
             } catch (e: GetCredentialCancellationException) {
-                Log.d(TAG, "Google Sign-In cancelled by user")
+                // Credential Manager meldet auch Konfigurationsfehler (z. B. nicht
+                // registrierter SHA-1-Fingerprint, falsche Client-ID) als Cancellation.
+                // Ohne Typ und Meldung ist ein echter Nutzerabbruch davon nicht zu
+                // unterscheiden.
+                Log.w(TAG, "Google Sign-In cancelled: type=${e.type}, message=${e.message}", e)
                 setLoading(false)
                 // User cancelled, no error message needed
             } catch (e: NoCredentialException) {
