@@ -62,7 +62,12 @@ class EditImageAdapter(
             ImageUtils.loadImage(binding.ivImage, imageUrl, R.drawable.placeholder_recipe)
             
             binding.btnDelete.setOnClickListener {
-                onDeleteClick(adapterPosition)
+                // Während einer laufenden Remove-Animation liefert die Position NO_POSITION
+                // (-1). Der Callback würde dann ins Leere laufen.
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onDeleteClick(position)
+                }
             }
         }
     }

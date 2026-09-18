@@ -79,16 +79,29 @@ class EditIngredientAdapter(
             binding.tvName.text = ingredient.name
             
             binding.btnEdit.setOnClickListener {
-                onEditClick(adapterPosition, ingredient)
+                withValidPosition { onEditClick(it, ingredient) }
             }
-            
+
             binding.btnDelete.setOnClickListener {
-                onDeleteClick(adapterPosition)
+                withValidPosition { onDeleteClick(it) }
             }
-            
+
             // Also allow editing by clicking on the row
             binding.root.setOnClickListener {
-                onEditClick(adapterPosition, ingredient)
+                withValidPosition { onEditClick(it, ingredient) }
+            }
+        }
+
+        /**
+         * Führt [action] nur aus, wenn der ViewHolder aktuell an eine gültige Position
+         * gebunden ist. Während einer laufenden Remove-Animation ist das nicht der Fall —
+         * der Callback würde dann mit -1 ins Leere laufen (z. B. Edit-Dialog öffnen und
+         * die Eingabe anschließend stillschweigend verwerfen).
+         */
+        private inline fun withValidPosition(action: (Int) -> Unit) {
+            val position = bindingAdapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                action(position)
             }
         }
     }
