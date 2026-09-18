@@ -19,6 +19,11 @@ out/
 build/
 app/build/
 
+# Ausgabe von "Generate Signed App Bundle / APK" (Assistent in Android Studio).
+# Das APK selbst faengt bereits *.apk ab, output-metadata.json und die
+# Baseline-Profile aendern sich aber bei jedem Release-Build.
+app/release/
+
 # Local configuration file (sdk path, etc)
 local.properties
 
@@ -50,6 +55,12 @@ captures/
 .idea/appInsightsSettings.xml
 .idea/deploymentTargetSelector.xml
 .idea/other.xml
+# Maschinenabhaengig: misc.xml haelt den Namen des Projekt-JDK fest, der auf
+# jedem Rechner anders lautet. deviceManager.xml und markdown.xml sind reiner
+# Oberflaechenzustand.
+.idea/misc.xml
+.idea/deviceManager.xml
+.idea/markdown.xml
 
 # Keep run configurations (optional - remove if you don't want to share them)
 # !.idea/runConfigurations/
