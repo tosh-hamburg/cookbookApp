@@ -3,6 +3,7 @@ package com.cookbook.app.ui.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.dispose
 import coil.load
 import com.cookbook.app.R
 import com.cookbook.app.databinding.ItemImagePagerBinding
@@ -36,7 +37,10 @@ class ImagePagerAdapter(
         
         fun bind(imageUrl: String) {
             if (ImageUtils.isBase64DataUrl(imageUrl)) {
-                // Handle base64 data URL
+                // Handle base64 data URL. setImageBitmap bypasses Coil, so a still running
+                // request of the previously bound image has to be cancelled explicitly —
+                // otherwise it completes later and overwrites this recycled page.
+                binding.ivImage.dispose()
                 val bitmap = ImageUtils.decodeBase64Image(imageUrl)
                 if (bitmap != null) {
                     binding.ivImage.setImageBitmap(bitmap)
