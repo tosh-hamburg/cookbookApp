@@ -6,6 +6,7 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import coil.dispose
 import coil.load
 import coil.transform.RoundedCornersTransformation
 import com.cookbook.app.R
@@ -65,7 +66,11 @@ class RecipeAdapter(
             val thumbnail = recipe.thumbnail
             if (thumbnail != null) {
                 if (ImageUtils.isBase64DataUrl(thumbnail)) {
-                    // Handle base64 data URL (thumbnail)
+                    // Handle base64 data URL (thumbnail). setImageDrawable bypasses Coil, so a
+                    // still running request of the previously bound recipe has to be cancelled
+                    // explicitly — otherwise it completes later and puts a foreign image into
+                    // this recycled ViewHolder.
+                    binding.ivRecipeImage.dispose()
                     val bitmap = ImageUtils.decodeBase64Image(thumbnail)
                     if (bitmap != null) {
                         // Create rounded corners drawable
@@ -89,9 +94,10 @@ class RecipeAdapter(
                     }
                 }
             } else {
+                binding.ivRecipeImage.dispose()
                 binding.ivRecipeImage.setImageResource(R.drawable.placeholder_recipe)
             }
-            
+
             // Click listener
             binding.root.setOnClickListener {
                 onRecipeClick(recipe)

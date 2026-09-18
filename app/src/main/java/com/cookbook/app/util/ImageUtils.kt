@@ -10,6 +10,7 @@ import android.util.Log
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import androidx.exifinterface.media.ExifInterface
+import coil.dispose
 import coil.load
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -47,14 +48,21 @@ object ImageUtils {
      */
     fun loadImage(imageView: ImageView, imageUrl: String?, @DrawableRes placeholderRes: Int? = null) {
         if (imageUrl.isNullOrEmpty()) {
+            // Cancel a pending Coil request from a previous binding, otherwise it would
+            // overwrite the placeholder once it completes (recycled ViewHolder).
+            imageView.dispose()
+            imageView.setImageDrawable(null)
             if (placeholderRes != null) {
                 imageView.setImageResource(placeholderRes)
             }
             return
         }
-        
+
         if (isBase64DataUrl(imageUrl)) {
-            // Decode base64 and set directly
+            // Decode base64 and set directly. setImageBitmap bypasses Coil, so an in-flight
+            // request of the previously bound item must be cancelled explicitly — otherwise
+            // its result lands in this ImageView and shows a foreign image.
+            imageView.dispose()
             val bitmap = decodeBase64Image(imageUrl)
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap)
