@@ -36,7 +36,8 @@
     <string name="refresh">Aktualisieren</string>
     <string name="no_recipes">Noch keine Rezepte vorhanden</string>
     <string name="add_first_recipe">Füge dein erstes Rezept hinzu!</string>
-    
+    <string name="adjust_search_or_filters">Versuche einen anderen Suchbegriff oder Filter.</string>
+
     <!-- Collections -->
     <string name="collections">Sammlungen</string>
     <string name="all_recipes">Alle Rezepte</string>

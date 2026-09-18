@@ -18,11 +18,22 @@ class RecipeRepository {
     
     companion object {
         private const val TAG = "RecipeRepository"
+
+        /**
+         * Längster Suchbegriff, den das Backend annimmt (MAX_SEARCH_LENGTH in
+         * backend/src/lib/recipe-search.ts). Längere Eingaben beantwortet es mit
+         * HTTP 400 — hier abgefangen, damit die Meldung verständlich bleibt.
+         */
+        const val MAX_SEARCH_LENGTH = 200
     }
-    
+
     /**
      * Get paginated recipes with optional filters
+     *
      * @param collectionIds List of collection IDs to filter by (optional, can select multiple)
+     * @param search Volltextsuche des Backends über Titel, Kategorien, Zutaten,
+     *   Notizen und Zubereitung. Die Suche läuft serverseitig und umfasst damit
+     *   auch Rezepte, die noch nicht geladen wurden.
      */
     suspend fun getRecipes(
         category: String? = null,
@@ -31,6 +42,12 @@ class RecipeRepository {
         limit: Int = 20,
         offset: Int = 0
     ): Result<PaginatedRecipes> {
+        if (search != null && search.length > MAX_SEARCH_LENGTH) {
+            return Result.failure(
+                Exception("Suchbegriff darf höchstens $MAX_SEARCH_LENGTH Zeichen lang sein")
+            )
+        }
+
         return try {
             // Convert list of collection IDs to comma-separated string
             val collectionsParam = collectionIds?.takeIf { it.isNotEmpty() }?.joinToString(",")

@@ -125,12 +125,14 @@
                     android:padding="32dp">
 
                     <TextView
+                        android:id="@+id/textEmptyStateIcon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🍳"
+                        android:text="@string/empty_state_icon_cooking"
                         android:textSize="72sp" />
 
                     <TextView
+                        android:id="@+id/textEmptyStateTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
@@ -140,9 +142,11 @@
                         android:textColor="@color/text_primary" />
 
                     <TextView
+                        android:id="@+id/textEmptyStateHint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:gravity="center"
                         android:text="@string/add_first_recipe"
                         android:textColor="@color/text_secondary" />
 

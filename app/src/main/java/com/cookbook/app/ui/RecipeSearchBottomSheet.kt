@@ -39,19 +39,23 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
     private var onRecipeSelected: ((RecipeListItem, Int, MealType) -> Unit)? = null
 
     private var searchJob: Job? = null
+    private var loadJob: Job? = null
     private var allRecipes: MutableList<RecipeListItem> = mutableListOf()
-    
+
     // Pagination state
     private var currentOffset = 0
     private var hasMore = true
     private var isLoadingMore = false
     private var currentSearchQuery = ""
-    
+
     companion object {
         private const val ARG_DAY_INDEX = "dayIndex"
         private const val ARG_MEAL_TYPE = "mealType"
         private const val ARG_DAY_NAME = "dayName"
         private const val PAGE_SIZE = 30
+
+        /** Wartezeit nach dem letzten Tastendruck, siehe MainActivity. */
+        private const val SEARCH_DEBOUNCE_MS = 300L
 
         fun newInstance(
             dayIndex: Int,
@@ -132,7 +136,9 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     
-                    if (dy > 0 && currentSearchQuery.isEmpty()) { // Only paginate when not filtering
+                    // Auch Suchtreffer werden seitenweise nachgeladen — gefiltert
+                    // wird im Backend, nicht in der bereits geladenen Liste.
+                    if (dy > 0) {
                         val visibleItemCount = linearLayoutManager.childCount
                         val totalItemCount = linearLayoutManager.itemCount
                         val firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition()
@@ -154,17 +160,21 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
                 searchJob?.cancel()
-                searchJob = lifecycleScope.launch {
-                    delay(300) // Debounce
-                    filterRecipes(s?.toString() ?: "")
+                searchJob = viewLifecycleOwner.lifecycleScope.launch {
+                    delay(SEARCH_DEBOUNCE_MS)
+                    if (query != currentSearchQuery) {
+                        loadRecipes(query)
+                    }
                 }
             }
         })
 
         binding.editSearch.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                filterRecipes(binding.editSearch.text?.toString() ?: "")
+                searchJob?.cancel()
+                loadRecipes(binding.editSearch.text?.toString()?.trim() ?: "")
                 true
             } else {
                 false
@@ -172,17 +182,32 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun loadRecipes() {
+    /**
+     * Lädt die erste Seite für [query] neu. Gesucht wird im Backend (Volltext
+     * über Titel, Kategorien, Zutaten, Notizen und Zubereitung), damit auch
+     * Rezepte gefunden werden, die noch nicht nachgeladen wurden.
+     */
+    private fun loadRecipes(query: String = "") {
+        currentSearchQuery = query
+
         // Reset pagination state
         currentOffset = 0
         hasMore = true
+        isLoadingMore = false
         allRecipes.clear()
         adapter.submitList(emptyList())
-        
+
         setLoading(true)
 
-        lifecycleScope.launch {
-            val result = recipeRepository.getRecipes(limit = PAGE_SIZE, offset = 0)
+        loadJob?.cancel()
+        loadJob = viewLifecycleOwner.lifecycleScope.launch {
+            val result = recipeRepository.getRecipes(
+                search = query.ifEmpty { null },
+                limit = PAGE_SIZE,
+                offset = 0
+            )
+
+            setLoading(false)
 
             result.onSuccess { paginatedResult ->
                 allRecipes = paginatedResult.items.toMutableList()
@@ -193,51 +218,45 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
             }.onFailure {
                 updateEmptyState(true)
             }
-
-            setLoading(false)
         }
     }
-    
+
     private fun loadMoreRecipes() {
         if (isLoadingMore || !hasMore) return
-        
+
         isLoadingMore = true
-        
-        lifecycleScope.launch {
-            val result = recipeRepository.getRecipes(limit = PAGE_SIZE, offset = currentOffset)
-            
+        val query = currentSearchQuery
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = recipeRepository.getRecipes(
+                search = query.ifEmpty { null },
+                limit = PAGE_SIZE,
+                offset = currentOffset
+            )
+
+            // Der Suchbegriff hat sich geändert, während die Seite unterwegs war —
+            // sie gehört nicht mehr zur angezeigten Trefferliste.
+            if (query != currentSearchQuery) return@launch
+
             result.onSuccess { paginatedResult ->
                 allRecipes.addAll(paginatedResult.items)
                 hasMore = paginatedResult.hasMore
                 currentOffset += paginatedResult.items.size
                 adapter.submitList(allRecipes.toList())
             }
-            
+
             isLoadingMore = false
         }
     }
 
-    private fun filterRecipes(query: String) {
-        currentSearchQuery = query
-        
-        if (query.isEmpty()) {
-            adapter.submitList(allRecipes.toList())
-            updateEmptyState(allRecipes.isEmpty())
-            return
-        }
-
-        val filteredList = allRecipes.filter { recipe ->
-            recipe.title.contains(query, ignoreCase = true) ||
-                    recipe.categories.any { it.contains(query, ignoreCase = true) }
-        }
-
-        adapter.submitList(filteredList)
-        updateEmptyState(filteredList.isEmpty())
-    }
-
     private fun setLoading(loading: Boolean) {
         binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-        binding.recyclerViewRecipes.visibility = if (loading) View.GONE else View.VISIBLE
+        if (loading) {
+            // Liste und Leerzustand ausblenden; welcher von beiden danach sichtbar
+            // wird, entscheidet updateEmptyState anhand des Ergebnisses.
+            binding.recyclerViewRecipes.visibility = View.GONE
+            binding.emptyStateContainer.visibility = View.GONE
+        }
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {
@@ -247,6 +266,8 @@ class RecipeSearchBottomSheet : BottomSheetDialogFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        searchJob = null
+        loadJob = null
         _binding = null
     }
 }

@@ -23,6 +23,8 @@ import com.cookbook.app.data.repository.AuthRepository
 import com.cookbook.app.data.repository.RecipeRepository
 import com.cookbook.app.databinding.ActivityMainBinding
 import com.cookbook.app.ui.adapter.RecipeAdapter
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -33,6 +35,13 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val PAGE_SIZE = 20
+
+        /**
+         * Wartezeit nach dem letzten Tastendruck, bevor gesucht wird. Die
+         * Volltextsuche läuft im Backend — ohne Entprellung löst jeder Buchstabe
+         * eine eigene Abfrage aus.
+         */
+        private const val SEARCH_DEBOUNCE_MS = 300L
     }
     
     private lateinit var binding: ActivityMainBinding
@@ -54,7 +63,15 @@ class MainActivity : AppCompatActivity() {
     private var selectedCategory: String? = null
     private var selectedCollections: MutableSet<String> = mutableSetOf() // Set of collection IDs
     private var searchQuery: String = ""
-    
+    private var searchJob: Job? = null
+
+    /**
+     * Zählt die Ladevorgänge. Antworten einer älteren Suche/Filterung dürfen die
+     * Liste nicht mehr verändern, sonst mischen sich Treffer verschiedener
+     * Suchbegriffe, wenn während des Tippens mehrere Abfragen unterwegs sind.
+     */
+    private var loadGeneration = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -321,6 +338,8 @@ class MainActivity : AppCompatActivity() {
     private fun resetAndLoadRecipes() {
         currentOffset = 0
         hasMore = true
+        isLoadingMore = false
+        loadGeneration++
         allRecipes.clear()
         recipeAdapter.submitList(emptyList())
         loadRecipes(isInitialLoad = true)
@@ -338,15 +357,17 @@ class MainActivity : AppCompatActivity() {
      * Load recipes with pagination
      */
     private fun loadRecipes(isInitialLoad: Boolean) {
+        val generation = loadGeneration
+
         lifecycleScope.launch {
-            Log.d(TAG, "loadRecipes: isInitialLoad=$isInitialLoad, offset=$currentOffset")
-            
+            Log.d(TAG, "loadRecipes: isInitialLoad=$isInitialLoad, offset=$currentOffset, search=$searchQuery")
+
             if (isInitialLoad) {
                 setLoading(true)
             } else {
                 isLoadingMore = true
             }
-            
+
             val result = recipeRepository.getRecipes(
                 category = selectedCategory,
                 collectionIds = selectedCollections.toList().ifEmpty { null },
@@ -354,7 +375,14 @@ class MainActivity : AppCompatActivity() {
                 limit = PAGE_SIZE,
                 offset = currentOffset
             )
-            
+
+            // Suchbegriff oder Filter haben sich geändert, während die Antwort
+            // unterwegs war — dieses Ergebnis gehört nicht mehr zur Anzeige.
+            if (generation != loadGeneration) {
+                Log.d(TAG, "loadRecipes: Ergebnis einer überholten Abfrage verworfen")
+                return@launch
+            }
+
             if (isInitialLoad) {
                 setLoading(false)
                 binding.swipeRefreshLayout.isRefreshing = false
@@ -388,11 +416,32 @@ class MainActivity : AppCompatActivity() {
     private fun updateRecipeList() {
         Log.d(TAG, "updateRecipeList: ${allRecipes.size} recipes, total=$totalRecipes")
         if (allRecipes.isEmpty()) {
+            updateEmptyStateText()
             binding.emptyStateContainer.visibility = View.VISIBLE
             binding.recyclerViewRecipes.visibility = View.GONE
         } else {
             binding.emptyStateContainer.visibility = View.GONE
             binding.recyclerViewRecipes.visibility = View.VISIBLE
+        }
+    }
+
+    /**
+     * "Noch keine Rezepte vorhanden" stimmt nur ohne Suche und Filter. Sucht der
+     * Nutzer, liegt es am Suchbegriff — dann muss der leere Zustand das sagen.
+     */
+    private fun updateEmptyStateText() {
+        val isFiltered = searchQuery.isNotEmpty() ||
+                selectedCategory != null ||
+                selectedCollections.isNotEmpty()
+
+        if (isFiltered) {
+            binding.textEmptyStateIcon.text = getString(R.string.empty_state_icon_search)
+            binding.textEmptyStateTitle.setText(R.string.no_recipes_found)
+            binding.textEmptyStateHint.setText(R.string.adjust_search_or_filters)
+        } else {
+            binding.textEmptyStateIcon.text = getString(R.string.empty_state_icon_cooking)
+            binding.textEmptyStateTitle.setText(R.string.no_recipes)
+            binding.textEmptyStateHint.setText(R.string.add_first_recipe)
         }
     }
     
@@ -432,21 +481,49 @@ class MainActivity : AppCompatActivity() {
         searchView.queryHint = getString(R.string.search_recipes)
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                searchQuery = query ?: ""
-                resetAndLoadRecipes()
+                searchJob?.cancel()
+                applySearchQuery(query ?: "")
+                searchView.clearFocus()
                 return true
             }
-            
+
             override fun onQueryTextChange(newText: String?): Boolean {
-                searchQuery = newText ?: ""
-                if (searchQuery.isEmpty()) {
-                    resetAndLoadRecipes()
+                val query = newText ?: ""
+                searchJob?.cancel()
+                searchJob = lifecycleScope.launch {
+                    delay(SEARCH_DEBOUNCE_MS)
+                    applySearchQuery(query)
                 }
                 return true
             }
         })
-        
+
+        // Das Einklappen des Suchfelds leert zwar die Eingabe, die zuletzt
+        // gesuchte Liste bliebe aber stehen.
+        searchItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem): Boolean = true
+
+            override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+                searchJob?.cancel()
+                applySearchQuery("")
+                return true
+            }
+        })
+
         return true
+    }
+
+    /**
+     * Übernimmt einen Suchbegriff und lädt die Liste neu. Die eigentliche Suche
+     * läuft im Backend (Volltext über Titel, Kategorien, Zutaten, Notizen und
+     * Zubereitung), damit auch noch nicht geladene Rezepte gefunden werden.
+     */
+    private fun applySearchQuery(query: String) {
+        val trimmed = query.trim()
+        if (trimmed == searchQuery) return
+
+        searchQuery = trimmed
+        resetAndLoadRecipes()
     }
     
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

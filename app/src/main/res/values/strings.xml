@@ -36,7 +36,10 @@
     <string name="refresh">Refresh</string>
     <string name="no_recipes">No recipes yet</string>
     <string name="add_first_recipe">Add your first recipe!</string>
-    
+    <string name="adjust_search_or_filters">Try a different search term or filter.</string>
+    <string name="empty_state_icon_cooking" translatable="false">🍳</string>
+    <string name="empty_state_icon_search" translatable="false">🔍</string>
+
     <!-- Collections -->
     <string name="collections">Collections</string>
     <string name="all_recipes">All Recipes</string>
