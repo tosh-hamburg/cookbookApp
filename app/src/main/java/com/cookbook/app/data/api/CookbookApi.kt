@@ -1,6 +1,10 @@
 package com.cookbook.app.data.api
 
 import com.cookbook.app.data.models.CookbookCollection
+import com.cookbook.app.data.models.CookedRequest
+import com.cookbook.app.data.models.CookedResponse
+import com.cookbook.app.data.models.FavoriteResponse
+import com.cookbook.app.data.models.FeaturedRecipe
 import com.cookbook.app.data.models.GoogleLoginRequest
 import com.cookbook.app.data.models.ImportedRecipeData
 import com.cookbook.app.data.models.LoginRequest
@@ -44,9 +48,15 @@ interface CookbookApi {
         @Query("category") category: String? = null,
         @Query("collections") collections: String? = null,
         @Query("search") search: String? = null,
+        @Query("favorite") favorite: Boolean? = null,
+        @Query("sort") sort: String? = null,
         @Query("limit") limit: Int = 20,
         @Query("offset") offset: Int = 0
     ): Response<PaginatedRecipes>
+
+    /** Rezept der Woche: höchste Kochhäufigkeit, sonst das neueste Rezept. */
+    @GET("recipes/featured")
+    suspend fun getFeaturedRecipe(): Response<FeaturedRecipe>
     
     @GET("recipes/{id}")
     suspend fun getRecipe(@Path("id") id: String): Response<Recipe>
@@ -62,6 +72,29 @@ interface CookbookApi {
     
     @DELETE("recipes/{id}")
     suspend fun deleteRecipe(@Path("id") id: String): Response<Unit>
+
+    // ==================== Kochhistorie & Favoriten ====================
+
+    /** "Fertig" im Kochmodus: legt einen Historieneintrag an und erhöht den Zähler. */
+    @POST("recipes/{id}/cooked")
+    suspend fun markCooked(
+        @Path("id") id: String,
+        @Body request: CookedRequest
+    ): Response<CookedResponse>
+
+    /** Nimmt den letzten Historieneintrag zurück (Fehlbedienung am Herd). */
+    @DELETE("recipes/{id}/cooked/last")
+    suspend fun undoLastCooked(@Path("id") id: String): Response<CookedResponse>
+
+    /** Setzt das Herz. Idempotent. Retrofit braucht für PUT einen Body. */
+    @PUT("recipes/{id}/favorite")
+    suspend fun addFavorite(
+        @Path("id") id: String,
+        @Body body: Map<String, String>
+    ): Response<FavoriteResponse>
+
+    @DELETE("recipes/{id}/favorite")
+    suspend fun removeFavorite(@Path("id") id: String): Response<FavoriteResponse>
     
     // ==================== Categories ====================
     

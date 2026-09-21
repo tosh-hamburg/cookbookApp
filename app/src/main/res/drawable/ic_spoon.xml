@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Löffel: "Jetzt kochen" -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24"
+    android:tint="@color/text_on_primary">
+    <path android:fillColor="@android:color/white"
+        android:pathData="M14.4,2C12.5,2 11,4.2 11,6.9c0,2.2 1,4 2.4,4.6L12.6,21c-0.05,0.55 0.38,1 0.93,1h1.7c0.55,0 0.98,-0.45 0.93,-1l-0.83,-9.5c1.4,-0.6 2.4,-2.4 2.4,-4.6C17.8,4.2 16.3,2 14.4,2zM8.5,2H7v6H5.5V2H4v6H2.5V2H1v7c0,1.5 1,2.8 2.5,3.1L2.6,21c-0.05,0.55 0.38,1 0.93,1h1.7c0.55,0 0.98,-0.45 0.93,-1L6.5,12.1C8,11.8 9,10.5 9,9V2H8.5z"/>
+</vector>

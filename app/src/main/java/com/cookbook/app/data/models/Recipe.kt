@@ -4,17 +4,22 @@ import java.io.Serializable
 
 /**
  * Recipe model matching the backend API response format
- * 
+ *
  * The backend transforms the data before sending:
  * - categories: string[] (category names)
  * - collections: { id, name }[]
  * - ingredients: { name, amount }[]
+ *
+ * cookCount/lastCookedAt/isFavorite kommen aus der Kochhistorie bzw. den
+ * Favoriten des angemeldeten Nutzers. Alle drei sind additiv: liefert das
+ * Backend sie (noch) nicht, greifen die JVM-Defaults 0/null/false.
  */
 data class Recipe(
     val id: String,
     val title: String,
     val images: List<String> = emptyList(),
     val instructions: String = "",
+    val notes: String? = null,
     val prepTime: Int = 0,
     val restTime: Int = 0,
     val cookTime: Int = 0,
@@ -27,15 +32,26 @@ data class Recipe(
     val userId: String? = null,
     val ingredients: List<Ingredient> = emptyList(),
     val categories: List<String> = emptyList(),  // Backend returns string array!
-    val collections: List<RecipeCollection> = emptyList()
+    val collections: List<RecipeCollection> = emptyList(),
+    val cookCount: Int = 0,
+    val lastCookedAt: String? = null,
+    val isFavorite: Boolean = false
 ) : Serializable {
-    
+
     val firstImage: String?
         get() = images.firstOrNull()
-    
+
     // For compatibility - categories is already a string list
     val categoryNames: List<String>
         get() = categories
+
+    /** Name der Sammlung, die Marker und Badge einfärbt; sonst die erste Kategorie. */
+    val collectionLabel: String?
+        get() = collections.firstOrNull()?.name ?: categories.firstOrNull()
+
+    /** Arbeitszeit = Vorbereitung + Kochen (Ruhezeit zählt nicht als Arbeit). */
+    val activeTime: Int
+        get() = prepTime + cookTime
 }
 
 /**
@@ -86,6 +102,7 @@ data class RecipeRequest(
     val title: String,
     val images: List<String> = emptyList(),
     val instructions: String = "",
+    val notes: String? = null,
     val prepTime: Int = 0,
     val restTime: Int = 0,
     val cookTime: Int = 0,
@@ -127,6 +144,9 @@ data class ImportedRecipeData(
 
 /**
  * Recipe list item (for paginated list view with thumbnail)
+ *
+ * collections ist nullable: ältere Backend-Stände liefern das Feld in der
+ * Listenantwort nicht mit.
  */
 data class RecipeListItem(
     val id: String,
@@ -137,8 +157,21 @@ data class RecipeListItem(
     val totalTime: Int = 0,
     val servings: Int = 4,
     val categories: List<String> = emptyList(),
-    val createdAt: String = ""
-) : Serializable
+    val collections: List<RecipeCollection>? = null,
+    val createdAt: String = "",
+    val cookCount: Int = 0,
+    val lastCookedAt: String? = null,
+    val isFavorite: Boolean = false
+) : Serializable {
+
+    /** Name der Sammlung, die Marker und Badge einfärbt; sonst die erste Kategorie. */
+    val collectionLabel: String?
+        get() = collections?.firstOrNull()?.name ?: categories.firstOrNull()
+
+    /** Sachzeile der Listenkarte, z. B. "Hokkaido · Kokosmilch". */
+    val subtitle: String
+        get() = categories.joinToString(" · ")
+}
 
 /**
  * Paginated response for recipe list

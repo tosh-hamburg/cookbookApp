@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kopf der Rezeptliste: Rezept der Woche und Sektionsüberschrift. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="16dp">
+
+    <LinearLayout
+        android:id="@+id/featuredContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/recipe_of_the_week"
+            android:textAppearance="@style/TextAppearance.Cookbook.Label.Accent" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardFeatured"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="@dimen/card_elevation"
+            app:strokeWidth="0dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/featured_photo_height">
+
+                <ImageView
+                    android:id="@+id/ivFeatured"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:scaleType="centerCrop"
+                    tools:src="@drawable/placeholder_recipe" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/photo_gradient_height"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/gradient_photo_card" />
+
+                <TextView
+                    android:id="@+id/tvFeaturedTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginBottom="14dp"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Serif"
+                    android:textColor="@color/text_on_primary"
+                    android:textSize="24sp"
+                    tools:text="Ofengemüse mit Feta" />
+
+            </FrameLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvFeaturedSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textAppearance="@style/TextAppearance.Cookbook.Body"
+            tools:text="Schon 7× gekocht — dein Familienfavorit." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCookNow"
+                style="@style/Theme.Cookbook.Button"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/pill_height"
+                android:layout_weight="1"
+                android:text="@string/cook_now"
+                app:icon="@drawable/ic_spoon"
+                app:iconGravity="textStart" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSchedule"
+                style="@style/Theme.Cookbook.Button.Outlined.Icon"
+                android:layout_width="@dimen/pill_height"
+                android:layout_height="@dimen/pill_height"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/schedule_recipe"
+                app:icon="@drawable/ic_calendar"
+                app:iconSize="20dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Sektion "Meine Sammlung" -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="12dp"
+        android:baselineAligned="true"
+        android:gravity="bottom"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/my_collection"
+            android:textAppearance="@style/TextAppearance.Cookbook.Section" />
+
+        <TextView
+            android:id="@+id/tvSectionCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="3dp"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:textAppearance="@style/TextAppearance.Cookbook.Number"
+            android:textColor="@color/text_hint"
+            android:textSize="13sp"
+            tools:text="42 Rezepte" />
+
+    </LinearLayout>
+
+</LinearLayout>

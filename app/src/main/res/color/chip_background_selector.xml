@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aktiv = Tinte-Fläche, inaktiv = transparent mit Rahmen. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/chip_background_selected" android:state_checked="true" />
+    <item android:color="@color/chip_background" />
+</selector>

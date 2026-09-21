@@ -5,51 +5,63 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="12dp">
+    android:layout_marginBottom="14dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="@dimen/card_elevation"
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Day Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/surface_variant"
-            android:padding="12dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp">
 
             <TextView
                 android:id="@+id/textDayName"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="16sp"
-                android:textStyle="bold"
+                android:fontFamily="@font/figtree_semibold"
                 android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 tools:text="Montag" />
 
             <TextView
                 android:id="@+id/textDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:textAppearance="@style/TextAppearance.Cookbook.Number"
+                android:textColor="@color/text_hint"
+                android:textSize="12.5sp"
+                tools:text="22.09." />
+
+            <TextView
+                android:id="@+id/textDayStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                tools:text="13.01." />
+                android:fontFamily="@font/figtree_medium"
+                android:textSize="12sp"
+                tools:text="geplant" />
 
         </LinearLayout>
 
-        <!-- Meal Slots Container -->
         <LinearLayout
             android:id="@+id/mealSlotsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp" />
+            android:paddingHorizontal="12dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="2dp" />
 
     </LinearLayout>
 

@@ -4,508 +4,572 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.viewpager2.widget.ViewPager2
-import coil.load
 import com.cookbook.app.R
 import com.cookbook.app.data.models.Ingredient
 import com.cookbook.app.data.models.Recipe
 import com.cookbook.app.data.repository.RecipeRepository
 import com.cookbook.app.databinding.ActivityRecipeDetailBinding
+import com.cookbook.app.databinding.ItemIngredientRowBinding
+import com.cookbook.app.databinding.ItemInstructionStepBinding
+import com.cookbook.app.databinding.ItemMetricColumnBinding
 import com.cookbook.app.ui.adapter.ImagePagerAdapter
+import com.cookbook.app.util.Amounts
+import com.cookbook.app.util.CollectionColors
+import com.cookbook.app.util.RecipeSteps
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.chip.Chip
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import kotlin.math.floor
 
 /**
- * Activity showing recipe details
+ * Rezeptdetail — Foto, Kennzahlen, Zutaten und Zubereitung.
  */
 class RecipeDetailActivity : AppCompatActivity() {
-    
+
     companion object {
         const val EXTRA_RECIPE_ID = "extra_recipe_id"
+
+        /** Grenzen des Portions-Steppers. */
+        private const val MIN_SERVINGS = 1
+        private const val MAX_SERVINGS = 12
     }
-    
+
     private lateinit var binding: ActivityRecipeDetailBinding
     private val recipeRepository by lazy { RecipeRepository() }
-    
+
     private var recipeId: String? = null
     private var currentRecipe: Recipe? = null
     private var currentServings: Int = 4
-    private var originalServings: Int = 4
-    
+    private var isFavorite: Boolean = false
+
+    /** Abgehakte Zutaten gelten nur für diese Sitzung. */
+    private val checkedIngredients = mutableSetOf<Int>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRecipeDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         recipeId = intent.getStringExtra(EXTRA_RECIPE_ID)
-        
-        setupToolbar()
+
+        setupHeader()
         setupServingsControls()
-        
-        if (recipeId != null) {
-            loadRecipe()
-        } else {
+        setupBottomBar()
+
+        if (recipeId == null) {
             showError("Rezept-ID fehlt")
             finish()
+            return
         }
+        loadRecipe()
     }
-    
+
     override fun onResume() {
         super.onResume()
-        // Refresh when returning from edit
         recipeId?.let { loadRecipe() }
     }
-    
-    private fun setupToolbar() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
+
+    // ==================== Kopf ====================
+
+    private fun setupHeader() {
+        // Die drei Kreise teilen sich eine Drawable-Ressource — ohne mutate()
+        // würde das Ausblenden auch andere Views mit diesem Hintergrund treffen.
+        listOf(binding.btnBack, binding.btnFavorite, binding.btnOverflow)
+            .forEach { it.background = it.background?.mutate() }
+
+        binding.btnBack.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        binding.btnFavorite.setOnClickListener { toggleFavorite() }
+        binding.btnOverflow.setOnClickListener { showOverflowMenu(it) }
+
+        // Eingeklappt trägt die Leiste Papier: Titel wird sichtbar, die weißen
+        // Kreise hinter den Knöpfen verschwinden.
+        binding.appBarLayout.addOnOffsetChangedListener(
+            AppBarLayout.OnOffsetChangedListener { appBar, verticalOffset ->
+                val range = appBar.totalScrollRange.takeIf { it > 0 } ?: return@OnOffsetChangedListener
+                val collapsed = abs(verticalOffset).toFloat() / range
+
+                binding.tvCollapsedTitle.alpha = ((collapsed - 0.6f) / 0.4f).coerceIn(0f, 1f)
+                binding.headerTextBlock.alpha = (1f - collapsed * 1.6f).coerceIn(0f, 1f)
+
+                val circleAlpha = ((1f - collapsed * 1.4f).coerceIn(0f, 1f) * 255).toInt()
+                listOf(binding.btnBack, binding.btnFavorite, binding.btnOverflow)
+                    .forEach { it.background?.alpha = circleAlpha }
+            }
+        )
     }
-    
+
+    private fun showOverflowMenu(anchor: View) {
+        PopupMenu(this, anchor).apply {
+            menuInflater.inflate(R.menu.menu_recipe_detail, menu)
+            // Bearbeiten und Wochenplan stehen in der festen Leiste unten.
+            menu.findItem(R.id.action_edit)?.isVisible = false
+            menu.findItem(R.id.action_add_to_planner)?.isVisible = false
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_collections -> { showManageCollections(); true }
+                    R.id.action_gemini -> { sendToGemini(); true }
+                    R.id.action_share -> { shareRecipe(); true }
+                    R.id.action_delete -> { confirmDelete(); true }
+                    else -> false
+                }
+            }
+            show()
+        }
+    }
+
+    private fun setupBottomBar() {
+        binding.btnCookMode.setOnClickListener {
+            val recipe = currentRecipe ?: return@setOnClickListener
+            val intent = Intent(this, CookModeActivity::class.java)
+            intent.putExtra(CookModeActivity.EXTRA_RECIPE_ID, recipe.id)
+            intent.putExtra(CookModeActivity.EXTRA_SERVINGS, currentServings)
+            startActivity(intent)
+        }
+        binding.btnAddToPlanner.setOnClickListener { showAddToWeekPlanner() }
+        binding.btnEdit.setOnClickListener { openEditActivity() }
+        binding.btnSendToGemini.setOnClickListener { sendToGemini() }
+        binding.noteBlock.setOnClickListener { openEditActivity() }
+    }
+
+    // ==================== Portionen ====================
+
     private fun setupServingsControls() {
-        binding.btnDecreaseServings.setOnClickListener {
-            if (currentServings > 1) {
-                currentServings--
-                updateServingsDisplay()
-                updateIngredientsDisplay()
-            }
-        }
-        
-        binding.btnIncreaseServings.setOnClickListener {
-            if (currentServings < 99) {
-                currentServings++
-                updateServingsDisplay()
-                updateIngredientsDisplay()
-            }
-        }
-        
-        binding.btnSendToGemini.setOnClickListener {
-            sendToGemini()
+        binding.btnDecreaseServings.setOnClickListener { changeServings(-1) }
+        binding.btnIncreaseServings.setOnClickListener { changeServings(1) }
+    }
+
+    private fun changeServings(delta: Int) {
+        val next = (currentServings + delta).coerceIn(MIN_SERVINGS, MAX_SERVINGS)
+        if (next == currentServings) return
+        currentServings = next
+        binding.tvServingsCount.text = currentServings.toString()
+        buildIngredientRows()
+        buildMetrics()
+    }
+
+    // ==================== Laden ====================
+
+    private fun loadRecipe() {
+        val id = recipeId ?: return
+        lifecycleScope.launch {
+            setLoading(true)
+            recipeRepository.getRecipe(id)
+                .onSuccess { recipe ->
+                    setLoading(false)
+                    currentRecipe = recipe
+                    displayRecipe(recipe)
+                }
+                .onFailure { error ->
+                    setLoading(false)
+                    showError(error.message ?: "Rezept konnte nicht geladen werden")
+                    finish()
+                }
         }
     }
-    
-    private fun updateServingsDisplay() {
+
+    private fun displayRecipe(recipe: Recipe) {
+        binding.tvTitle.text = recipe.title
+        binding.tvCollapsedTitle.text = recipe.title
+
+        currentServings = recipe.servings.takeIf { it > 0 }?.coerceIn(MIN_SERVINGS, MAX_SERVINGS) ?: 4
         binding.tvServingsCount.text = currentServings.toString()
-        
+
+        isFavorite = recipe.isFavorite
+        renderFavorite()
+
+        bindImages(recipe)
+        bindCollectionBadge(recipe)
+        buildMetrics()
+        bindNote(recipe)
+        buildIngredientRows()
+        buildSteps(recipe)
+        bindCategories(recipe)
+        bindSourceUrl(recipe)
+    }
+
+    private fun bindImages(recipe: Recipe) {
+        val hasImages = recipe.images.isNotEmpty()
+        binding.viewPagerImages.visibility = if (hasImages) View.VISIBLE else View.GONE
+        binding.ivPlaceholder.visibility = if (hasImages) View.GONE else View.VISIBLE
+        binding.tabLayoutIndicator.visibility =
+            if (recipe.images.size > 1) View.VISIBLE else View.GONE
+
+        if (!hasImages) {
+            binding.ivPlaceholder.imageTintList =
+                ColorStateList.valueOf(CollectionColors.forName(recipe.collectionLabel))
+            return
+        }
+
+        binding.viewPagerImages.adapter = ImagePagerAdapter(recipe.images)
+        if (recipe.images.size > 1) {
+            TabLayoutMediator(binding.tabLayoutIndicator, binding.viewPagerImages) { _, _ -> }.attach()
+        }
+    }
+
+    private fun bindCollectionBadge(recipe: Recipe) {
+        val label = recipe.collectionLabel
+        if (label.isNullOrBlank()) {
+            binding.tvCollectionBadge.visibility = View.GONE
+            return
+        }
+        binding.tvCollectionBadge.visibility = View.VISIBLE
+        binding.tvCollectionBadge.text = label
+        binding.tvCollectionBadge.setTextColor(CollectionColors.forName(label))
+    }
+
+    /**
+     * Metrik-Karte. Spalten mit Wert 0 werden weggelassen, die übrigen verteilen
+     * sich gleichmäßig — eine "0" ist keine Information.
+     */
+    private fun buildMetrics() {
+        val recipe = currentRecipe ?: return
+        binding.metricsRow.removeAllViews()
+
+        val columns = buildList {
+            if (recipe.totalTime > 0) {
+                add(recipe.totalTime.toString() to getString(R.string.metric_total))
+            }
+            if (recipe.activeTime > 0) {
+                add(recipe.activeTime.toString() to getString(R.string.metric_work))
+            }
+            if (recipe.caloriesPerUnit > 0) {
+                add(recipe.caloriesPerUnit.toString() to getString(R.string.metric_calories))
+            }
+            if (recipe.cookCount > 0) {
+                add(recipe.cookCount.toString() + getString(R.string.times_short) to getString(R.string.metric_cooked))
+            }
+        }
+
+        binding.metricsRow.visibility = if (columns.isEmpty()) View.GONE else View.VISIBLE
+        val inflater = LayoutInflater.from(this)
+        columns.forEach { (value, label) ->
+            val column = ItemMetricColumnBinding.inflate(inflater, binding.metricsRow, false)
+            column.tvMetricValue.text = value
+            column.tvMetricLabel.text = label
+            column.root.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            binding.metricsRow.addView(column.root)
+        }
+    }
+
+    private fun bindNote(recipe: Recipe) {
+        val note = recipe.notes?.trim()
+        binding.noteBlock.visibility = if (note.isNullOrEmpty()) View.GONE else View.VISIBLE
+        binding.tvNote.text = note
+    }
+
+    // ==================== Zutaten ====================
+
+    /**
+     * Mengen werden mit dem Verhältnis der Portionen umgerechnet. Nicht
+     * parsebare Angaben bleiben stehen; kcal pro Portion ändert sich nicht.
+     */
+    private fun buildIngredientRows() {
+        val recipe = currentRecipe ?: return
+        val container = binding.ingredientsContainer
+        container.removeAllViews()
+
+        val factor = Amounts.factor(currentServings, recipe.servings)
+        val inflater = LayoutInflater.from(this)
+
+        recipe.ingredients.forEachIndexed { index, ingredient ->
+            val row = ItemIngredientRowBinding.inflate(inflater, container, false)
+            bindIngredientRow(row, index, ingredient, factor)
+            container.addView(row.root)
+
+            if (index < recipe.ingredients.lastIndex) {
+                container.addView(createDivider())
+            }
+        }
+    }
+
+    private fun bindIngredientRow(
+        row: ItemIngredientRowBinding,
+        index: Int,
+        ingredient: Ingredient,
+        factor: Double
+    ) {
+        row.tvIngredientName.text = ingredient.name
+        row.tvIngredientAmount.text = Amounts.scale(ingredient.amount, factor)
+        renderChecked(row, checkedIngredients.contains(index))
+
+        // Die ganze Zeile ist das Touch-Target.
+        row.ingredientRow.setOnClickListener {
+            val nowChecked = !checkedIngredients.contains(index)
+            if (nowChecked) checkedIngredients.add(index) else checkedIngredients.remove(index)
+            renderChecked(row, nowChecked)
+        }
+    }
+
+    private fun renderChecked(row: ItemIngredientRowBinding, isChecked: Boolean) {
+        row.checkbox.setBackgroundResource(
+            if (isChecked) R.drawable.bg_checkbox_checked else R.drawable.bg_checkbox_unchecked
+        )
+        val nameColor = ContextCompat.getColor(
+            this, if (isChecked) R.color.ingredient_checked else R.color.text_primary
+        )
+        val amountColor = ContextCompat.getColor(
+            this, if (isChecked) R.color.ingredient_checked else R.color.text_secondary
+        )
+        row.tvIngredientName.setTextColor(nameColor)
+        row.tvIngredientAmount.setTextColor(amountColor)
+        row.tvIngredientName.paintFlags = if (isChecked) {
+            row.tvIngredientName.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+        } else {
+            row.tvIngredientName.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+        }
+    }
+
+    private fun createDivider(): View = View(this).apply {
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            (1 * resources.displayMetrics.density).toInt()
+        )
+        setBackgroundColor(ContextCompat.getColor(this@RecipeDetailActivity, R.color.card_stroke))
+    }
+
+    // ==================== Zubereitung ====================
+
+    private fun buildSteps(recipe: Recipe) {
+        val container = binding.stepsContainer
+        container.removeAllViews()
+
+        val steps = RecipeSteps.parse(recipe.instructions)
+        val hasSteps = steps.isNotEmpty()
+        binding.tvInstructionsHeader.visibility = if (hasSteps) View.VISIBLE else View.GONE
+        if (!hasSteps) return
+
+        val inflater = LayoutInflater.from(this)
+        steps.forEach { step ->
+            val view = ItemInstructionStepBinding.inflate(inflater, container, false)
+            view.tvStepNumber.text = step.label
+            view.tvStepText.text = step.text
+
+            val hasHead = step.name != null || step.minutes != null
+            view.stepHeadRow.visibility = if (hasHead) View.VISIBLE else View.GONE
+            view.tvStepName.text = step.name.orEmpty()
+            view.tvStepDuration.visibility = if (step.minutes == null) View.GONE else View.VISIBLE
+            step.minutes?.let {
+                view.tvStepDuration.text = getString(R.string.minutes_with_unit, it)
+            }
+
+            view.stepDivider.visibility = if (step.index == steps.lastIndex) View.GONE else View.VISIBLE
+            container.addView(view.root)
+        }
+    }
+
+    private fun bindCategories(recipe: Recipe) {
+        binding.chipGroupCategories.removeAllViews()
+        recipe.categoryNames.forEach { name ->
+            val chip = Chip(this).apply {
+                setChipDrawable(
+                    com.google.android.material.chip.ChipDrawable.createFromAttributes(
+                        this@RecipeDetailActivity, null, 0, R.style.Theme_Cookbook_Chip_Static
+                    )
+                )
+                text = name
+                isClickable = false
+                isCheckable = false
+            }
+            binding.chipGroupCategories.addView(chip)
+        }
+    }
+
+    private fun bindSourceUrl(recipe: Recipe) {
+        val url = recipe.sourceUrl
+        if (url.isNullOrEmpty()) {
+            binding.btnSourceUrl.visibility = View.GONE
+            return
+        }
+        binding.btnSourceUrl.visibility = View.VISIBLE
+        binding.btnSourceUrl.setOnClickListener { openUrl(url) }
+    }
+
+    // ==================== Favorit ====================
+
+    /** Optimistisch schalten, bei einem Fehler zurückrollen. */
+    private fun toggleFavorite() {
+        val id = currentRecipe?.id ?: return
+        val previous = isFavorite
+        isFavorite = !previous
+        renderFavorite()
+
+        lifecycleScope.launch {
+            recipeRepository.setFavorite(id, isFavorite)
+                .onSuccess { response ->
+                    isFavorite = response.isFavorite
+                    currentRecipe = currentRecipe?.copy(isFavorite = response.isFavorite)
+                    renderFavorite()
+                }
+                .onFailure {
+                    isFavorite = previous
+                    renderFavorite()
+                    showError(getString(R.string.favorite_failed))
+                }
+        }
+    }
+
+    private fun renderFavorite() {
+        binding.btnFavorite.setImageResource(
+            if (isFavorite) R.drawable.ic_heart_filled else R.drawable.ic_heart
+        )
+        binding.btnFavorite.imageTintList = ColorStateList.valueOf(
+            ContextCompat.getColor(
+                this, if (isFavorite) R.color.primary else R.color.favorite_inactive
+            )
+        )
+    }
+
+    // ==================== Aktionen ====================
+
+    private fun showManageCollections() {
+        val recipe = currentRecipe ?: return
+        ManageCollectionsBottomSheet.newInstance(recipe).apply {
+            onCollectionsUpdated = { loadRecipe() }
+        }.show(supportFragmentManager, "ManageCollections")
+    }
+
+    private fun showAddToWeekPlanner() {
+        val recipe = currentRecipe ?: return
+        AddToWeekPlannerBottomSheet.newInstance(recipe)
+            .show(supportFragmentManager, "AddToWeekPlanner")
+    }
+
+    private fun scaledIngredients(recipe: Recipe): List<Ingredient> {
+        val factor = Amounts.factor(currentServings, recipe.servings)
+        return recipe.ingredients.map { it.copy(amount = Amounts.scale(it.amount, factor)) }
+    }
+
+    private fun sendToGemini() {
+        val recipe = currentRecipe ?: return
+
+        val ingredientsList = scaledIngredients(recipe)
+            .joinToString("\n") { if (it.amount.isNotEmpty()) "${it.amount} ${it.name}" else it.name }
+
         val portionLabel = if (currentServings == 1) {
             getString(R.string.portion_singular)
         } else {
             getString(R.string.portion_plural)
         }
-        binding.tvServingsLabel.text = portionLabel
-        
-        // Show hint if different from original
-        if (currentServings != originalServings) {
-            val originalLabel = if (originalServings == 1) {
-                getString(R.string.portion_singular)
-            } else {
-                getString(R.string.portion_plural)
-            }
-            binding.tvOriginalServings.text = getString(
-                R.string.original_recipe_for,
-                originalServings,
-                originalLabel
-            )
-            binding.tvOriginalServings.visibility = View.VISIBLE
-        } else {
-            binding.tvOriginalServings.visibility = View.GONE
-        }
-    }
-    
-    private fun updateIngredientsDisplay() {
-        currentRecipe?.let { recipe ->
-            val scaledIngredients = getScaledIngredients(recipe.ingredients)
-            binding.tvIngredients.text = scaledIngredients.joinToString("\n") { ingredient ->
-                "• ${ingredient.amount} ${ingredient.name}"
-            }
-        }
-    }
-    
-    /**
-     * Scale ingredients based on current vs original servings
-     */
-    private fun getScaledIngredients(ingredients: List<Ingredient>): List<Ingredient> {
-        val factor = currentServings.toDouble() / originalServings.toDouble()
-        return ingredients.map { ing ->
-            Ingredient(
-                name = ing.name,
-                amount = scaleIngredientAmount(ing.amount, factor)
-            )
-        }
-    }
-    
-    /**
-     * Scale an ingredient amount string by a factor
-     * Handles numbers, decimals, and fractions (like 1/2)
-     */
-    private fun scaleIngredientAmount(amount: String, factor: Double): String {
-        if (amount.isBlank() || factor == 1.0) return amount
-        
-        // Regex to match numbers (including decimals with . or , and fractions like 1/2)
-        val numberPattern = Regex("""(\d+(?:[.,]\d+)?(?:\s*/\s*\d+)?)""")
-        
-        return numberPattern.replace(amount) { match ->
-            val matchStr = match.value
-            
-            if (matchStr.contains("/")) {
-                // Handle fractions like "1/2"
-                val parts = matchStr.split("/").map { it.trim().replace(",", ".").toDoubleOrNull() ?: 1.0 }
-                if (parts.size == 2) {
-                    val value = (parts[0] / parts[1]) * factor
-                    formatScaledNumber(value)
-                } else {
-                    matchStr
-                }
-            } else {
-                // Handle regular numbers
-                val num = matchStr.replace(",", ".").toDoubleOrNull() ?: return@replace matchStr
-                val scaled = num * factor
-                formatScaledNumber(scaled)
-            }
-        }
-    }
-    
-    /**
-     * Format a scaled number nicely, using fractions when appropriate
-     */
-    private fun formatScaledNumber(value: Double): String {
-        // Check if it's a whole number
-        if (value == floor(value)) {
-            return value.toInt().toString()
-        }
-        
-        val intPart = floor(value).toInt()
-        val remainder = value % 1
-        
-        // Check for common fractions
-        return when {
-            abs(remainder - 0.5) < 0.01 -> if (intPart > 0) "$intPart½" else "½"
-            abs(remainder - 0.25) < 0.01 -> if (intPart > 0) "$intPart¼" else "¼"
-            abs(remainder - 0.75) < 0.01 -> if (intPart > 0) "$intPart¾" else "¾"
-            abs(remainder - 0.333) < 0.02 -> if (intPart > 0) "$intPart⅓" else "⅓"
-            abs(remainder - 0.666) < 0.02 -> if (intPart > 0) "$intPart⅔" else "⅔"
-            else -> {
-                // Round to 1 decimal place
-                val formatted = "%.1f".format(value).replace(".", ",").trimEnd('0').trimEnd(',')
-                formatted
-            }
-        }
-    }
-    
-    private fun loadRecipe() {
-        lifecycleScope.launch {
-            setLoading(true)
-            
-            val result = recipeRepository.getRecipe(recipeId!!)
-            
-            setLoading(false)
-            
-            result.onSuccess { recipe ->
-                currentRecipe = recipe
-                displayRecipe(recipe)
-            }.onFailure { error ->
-                showError(error.message ?: "Rezept konnte nicht geladen werden")
-                finish()
-            }
-        }
-    }
-    
-    private fun displayRecipe(recipe: Recipe) {
-        // Title
-        supportActionBar?.title = recipe.title
-        binding.tvTitle.text = recipe.title
-        
-        // Images
-        if (recipe.images.isNotEmpty()) {
-            binding.viewPagerImages.visibility = View.VISIBLE
-            binding.tabLayoutIndicator.visibility = if (recipe.images.size > 1) View.VISIBLE else View.GONE
-            
-            val adapter = ImagePagerAdapter(recipe.images)
-            binding.viewPagerImages.adapter = adapter
-            
-            TabLayoutMediator(binding.tabLayoutIndicator, binding.viewPagerImages) { _, _ -> }
-                .attach()
-        } else {
-            binding.viewPagerImages.visibility = View.GONE
-            binding.tabLayoutIndicator.visibility = View.GONE
-        }
-        
-        // Time info
-        binding.tvPrepTime.text = "${recipe.prepTime} Min."
-        binding.tvCookTime.text = "${recipe.cookTime} Min."
-        binding.tvTotalTime.text = "${recipe.totalTime} Min."
-        
-        // Initialize servings
-        originalServings = recipe.servings.takeIf { it > 0 } ?: 4
-        currentServings = originalServings
-        updateServingsDisplay()
-        
-        // Calories
-        if (recipe.caloriesPerUnit > 0) {
-            binding.tvCalories.visibility = View.VISIBLE
-            binding.tvCalories.text = "${recipe.caloriesPerUnit} kcal/${recipe.weightUnit}"
-        } else {
-            binding.tvCalories.visibility = View.GONE
-        }
-        
-        // Categories
-        binding.chipGroupCategories.removeAllViews()
-        recipe.categoryNames.forEach { categoryName ->
-            val chip = Chip(this).apply {
-                text = categoryName
-                isClickable = false
-            }
-            binding.chipGroupCategories.addView(chip)
-        }
-        
-        // Ingredients (with potential scaling)
-        updateIngredientsDisplay()
-        
-        // Instructions
-        binding.tvInstructions.text = recipe.instructions
-        
-        // Source URL
-        if (!recipe.sourceUrl.isNullOrEmpty()) {
-            binding.btnSourceUrl.visibility = View.VISIBLE
-            binding.btnSourceUrl.setOnClickListener {
-                openUrl(recipe.sourceUrl)
-            }
-        } else {
-            binding.btnSourceUrl.visibility = View.GONE
-        }
-    }
-    
-    private fun openUrl(url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            startActivity(intent)
-        } catch (e: Exception) {
-            showError("URL konnte nicht geöffnet werden")
-        }
-    }
-    
-    private fun setLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        binding.contentContainer.visibility = if (isLoading) View.GONE else View.VISIBLE
-    }
-    
-    private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-    }
-    
-    // ==================== Menu ====================
-    
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_recipe_detail, menu)
-        return true
-    }
-    
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                onBackPressedDispatcher.onBackPressed()
-                true
-            }
-            R.id.action_edit -> {
-                openEditActivity()
-                true
-            }
-            R.id.action_collections -> {
-                showManageCollections()
-                true
-            }
-            R.id.action_add_to_planner -> {
-                showAddToWeekPlanner()
-                true
-            }
-            R.id.action_gemini -> {
-                sendToGemini()
-                true
-            }
-            R.id.action_delete -> {
-                confirmDelete()
-                true
-            }
-            R.id.action_share -> {
-                shareRecipe()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-    
-    private fun showManageCollections() {
-        currentRecipe?.let { recipe ->
-            val bottomSheet = ManageCollectionsBottomSheet.newInstance(recipe)
-            bottomSheet.onCollectionsUpdated = {
-                // Reload recipe to get updated collections
-                loadRecipe()
-            }
-            bottomSheet.show(supportFragmentManager, "ManageCollections")
-        }
-    }
-    
-    private fun showAddToWeekPlanner() {
-        currentRecipe?.let { recipe ->
-            val bottomSheet = AddToWeekPlannerBottomSheet.newInstance(recipe)
-            bottomSheet.onRecipeAdded = {
-                // Recipe was successfully added to week planner
-                // No need to reload recipe, just show success message
-            }
-            bottomSheet.show(supportFragmentManager, "AddToWeekPlanner")
-        }
-    }
-    
-    private fun sendToGemini() {
-        currentRecipe?.let { recipe ->
-            // Get scaled ingredients based on current servings
-            val scaledIngredients = getScaledIngredients(recipe.ingredients)
-            
-            // Format ingredients as a list
-            val ingredientsList = scaledIngredients
-                .map { if (it.amount.isNotEmpty()) "${it.amount} ${it.name}" else it.name }
-                .joinToString("\n")
-            
-            // Portion label
-            val portionLabel = if (currentServings == 1) {
-                getString(R.string.portion_singular)
-            } else {
-                getString(R.string.portion_plural)
-            }
-            
-            // Create Gemini prompt (same as web app)
-            val prompt = """Füge bitte folgende Zutaten zu meiner Einkaufsliste in Google Keep hinzu (erstelle die Liste "Einkaufsliste" falls sie nicht existiert):
+
+        val prompt = """Füge bitte folgende Zutaten zu meiner Einkaufsliste in Google Keep hinzu (erstelle die Liste "Einkaufsliste" falls sie nicht existiert):
 
 ${recipe.title} ($currentServings $portionLabel):
 $ingredientsList"""
-            
-            // Copy to clipboard
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newPlainText("Gemini Prompt", prompt)
-            clipboard.setPrimaryClip(clip)
-            
-            // Show dialog with option to open Gemini
-            AlertDialog.Builder(this)
-                .setTitle(R.string.gemini_prompt_copied)
-                .setMessage(R.string.gemini_prompt_description)
-                .setPositiveButton(R.string.open_gemini) { _, _ ->
-                    openGemini()
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
-        }
+
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("Gemini Prompt", prompt))
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.gemini_prompt_copied)
+            .setMessage(R.string.gemini_prompt_description)
+            .setPositiveButton(R.string.open_gemini) { _, _ -> openGemini() }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
-    
+
     private fun openGemini() {
-        android.util.Log.d("RecipeDetail", "openGemini called")
-        
-        // Try to open Gemini app directly first
         val geminiPackages = listOf(
-            "com.google.android.apps.bard",      // Gemini app
-            "com.google.android.apps.googleassistant"  // Google Assistant with Gemini
+            "com.google.android.apps.bard",
+            "com.google.android.apps.googleassistant"
         )
-        
+
         for (packageName in geminiPackages) {
-            try {
-                android.util.Log.d("RecipeDetail", "Trying package: $packageName")
-                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-                if (launchIntent != null) {
-                    android.util.Log.d("RecipeDetail", "Found package, launching: $packageName")
-                    startActivity(launchIntent)
-                    return
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("RecipeDetail", "Error with package $packageName", e)
+            val launchIntent = runCatching { packageManager.getLaunchIntentForPackage(packageName) }
+                .getOrNull()
+            if (launchIntent != null) {
+                startActivity(launchIntent)
+                return
             }
         }
-        
-        // Fallback: Open Gemini website in browser with chooser
-        android.util.Log.d("RecipeDetail", "No Gemini app found, opening browser")
-        try {
+
+        runCatching {
             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://gemini.google.com/app"))
-            val chooser = Intent.createChooser(browserIntent, "Gemini öffnen mit...")
-            startActivity(chooser)
-        } catch (e: Exception) {
-            android.util.Log.e("RecipeDetail", "Error opening browser", e)
-            showError(getString(R.string.gemini_not_found))
-        }
+            startActivity(Intent.createChooser(browserIntent, getString(R.string.open_gemini)))
+        }.onFailure { showError(getString(R.string.gemini_not_found)) }
     }
-    
+
     private fun openEditActivity() {
-        currentRecipe?.let { recipe ->
-            val intent = Intent(this, RecipeEditActivity::class.java)
-            intent.putExtra(RecipeEditActivity.EXTRA_RECIPE_ID, recipe.id)
-            startActivity(intent)
-        }
+        val recipe = currentRecipe ?: return
+        val intent = Intent(this, RecipeEditActivity::class.java)
+        intent.putExtra(RecipeEditActivity.EXTRA_RECIPE_ID, recipe.id)
+        startActivity(intent)
     }
-    
+
     private fun confirmDelete() {
         AlertDialog.Builder(this)
             .setTitle(R.string.delete_recipe)
             .setMessage(R.string.delete_recipe_confirm)
-            .setPositiveButton(R.string.delete) { _, _ ->
-                deleteRecipe()
-            }
+            .setPositiveButton(R.string.delete) { _, _ -> deleteRecipe() }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
-    
+
     private fun deleteRecipe() {
-        recipeId?.let { id ->
-            lifecycleScope.launch {
-                setLoading(true)
-                
-                val result = recipeRepository.deleteRecipe(id)
-                
-                result.onSuccess {
+        val id = recipeId ?: return
+        lifecycleScope.launch {
+            setLoading(true)
+            recipeRepository.deleteRecipe(id)
+                .onSuccess {
                     Toast.makeText(this@RecipeDetailActivity, R.string.recipe_deleted, Toast.LENGTH_SHORT).show()
                     finish()
-                }.onFailure { error ->
+                }
+                .onFailure { error ->
                     setLoading(false)
                     showError(error.message ?: "Rezept konnte nicht gelöscht werden")
                 }
-            }
         }
     }
-    
+
     private fun shareRecipe() {
-        currentRecipe?.let { recipe ->
-            val shareText = buildString {
-                appendLine(recipe.title)
+        val recipe = currentRecipe ?: return
+        val shareText = buildString {
+            appendLine(recipe.title)
+            appendLine()
+            appendLine(getString(R.string.ingredients) + ":")
+            scaledIngredients(recipe).forEach { appendLine("• ${it.amount} ${it.name}") }
+            appendLine()
+            appendLine(getString(R.string.instructions) + ":")
+            appendLine(recipe.instructions)
+            if (!recipe.sourceUrl.isNullOrEmpty()) {
                 appendLine()
-                appendLine("Zutaten:")
-                recipe.ingredients.forEach { ingredient ->
-                    appendLine("• ${ingredient.amount} ${ingredient.name}")
-                }
-                appendLine()
-                appendLine("Zubereitung:")
-                appendLine(recipe.instructions)
-                
-                if (!recipe.sourceUrl.isNullOrEmpty()) {
-                    appendLine()
-                    appendLine("Quelle: ${recipe.sourceUrl}")
-                }
+                appendLine("Quelle: ${recipe.sourceUrl}")
             }
-            
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_SUBJECT, recipe.title)
-                putExtra(Intent.EXTRA_TEXT, shareText)
-            }
-            startActivity(Intent.createChooser(intent, "Rezept teilen"))
         }
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, recipe.title)
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.share)))
+    }
+
+    private fun openUrl(url: String) {
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+            .onFailure { showError("URL konnte nicht geöffnet werden") }
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isLoading) View.GONE else View.VISIBLE
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 }

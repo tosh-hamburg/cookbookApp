@@ -1,53 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Design-System "Küchentisch 1.0" — Farbpalette.
+    Warmes Papier, ein Terrakotta-Akzent, Tinte als Schriftfarbe.
+-->
 <resources>
-    <!-- Primary Colors - Warm Orange/Terracotta -->
-    <color name="primary">#D4654A</color>
-    <color name="primary_variant">#B84C33</color>
-    <color name="primary_light">#E8866F</color>
-    
-    <!-- Secondary Colors - Sage Green -->
-    <color name="secondary">#7D9B76</color>
-    <color name="secondary_variant">#5E7A58</color>
-    <color name="secondary_light">#A5BDA0</color>
-    
-    <!-- Accent Colors -->
-    <color name="accent">#E6A756</color>
-    <color name="accent_dark">#C98A3C</color>
-    
-    <!-- Background Colors -->
-    <color name="background">#FDF8F3</color>
+    <!-- Akzent -->
+    <color name="primary">#C8522F</color>
+    <color name="primary_variant">#A94123</color>
+    <color name="primary_light">#E08A6C</color>
+
+    <!-- Kräutergrün / Salbei -->
+    <color name="secondary">#4E7A56</color>
+    <color name="secondary_variant">#3C6144</color>
+    <color name="secondary_light">#D6DCA8</color>
+
+    <!-- Gold -->
+    <color name="accent">#D9AE55</color>
+    <color name="accent_dark">#B8913F</color>
+
+    <!-- Flächen -->
+    <color name="background">#F7F1E6</color>
     <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F5EDE6</color>
-    
-    <!-- Text Colors -->
-    <color name="text_primary">#2D2926</color>
-    <color name="text_secondary">#5C5652</color>
-    <color name="text_hint">#9A928B</color>
+    <color name="surface_variant">#F2EADD</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="card_stroke">#F1EAE0</color>
+    <color name="divider">#DCD4C6</color>
+
+    <!-- Schrift -->
+    <color name="text_primary">#3A2A22</color>
+    <color name="text_secondary">#6B564C</color>
+    <color name="text_hint">#8E7666</color>
     <color name="text_on_primary">#FFFFFF</color>
     <color name="text_on_secondary">#FFFFFF</color>
-    
-    <!-- Status Colors -->
-    <color name="success">#4CAF50</color>
-    <color name="warning">#FFC107</color>
-    <color name="error">#E53935</color>
-    
-    <!-- Difficulty Colors -->
-    <color name="difficulty_easy">#4CAF50</color>
-    <color name="difficulty_medium">#FF9800</color>
-    <color name="difficulty_hard">#F44336</color>
-    
-    <!-- Category Chip Colors -->
-    <color name="chip_background">#F0E6DC</color>
-    <color name="chip_text">#5C5652</color>
-    
-    <!-- Card Colors -->
-    <color name="card_background">#FFFFFF</color>
-    <color name="card_stroke">#E8E0D8</color>
-    
-    <!-- Divider -->
-    <color name="divider">#E0D8D0</color>
-    
-    <!-- Favorite -->
-    <color name="favorite_active">#E53935</color>
-    <color name="favorite_inactive">#BDBDBD</color>
+    <color name="text_on_accent">#3A2A18</color>
+
+    <!-- Kochmodus -->
+    <color name="cook_bg">#332419</color>
+    <color name="cook_fg">#EADFCD</color>
+    <color name="cook_fg_dim">#B9A88C</color>
+    <color name="cook_surface_soft">#0FFFFFFF</color>
+    <color name="cook_timer_bg">#3D000000</color>
+    <color name="cook_pill_bg">#14FFFFFF</color>
+    <color name="cook_outline">#47FFFFFF</color>
+    <color name="cook_progress_open">#2EFFFFFF</color>
+
+    <!-- Chips -->
+    <color name="chip_background">#00000000</color>
+    <color name="chip_stroke">#DCD4C6</color>
+    <color name="chip_text">#6B564C</color>
+    <color name="chip_background_selected">#3A2A22</color>
+    <color name="chip_text_selected">#FFFFFF</color>
+
+    <!-- Slots -->
+    <color name="slot_selected_bg">#FAF0DD</color>
+
+    <!-- Status -->
+    <color name="favorite_active">#C8522F</color>
+    <color name="favorite_inactive">#B5A492</color>
+    <color name="success">#4E7A56</color>
+    <color name="warning">#B8913F</color>
+    <color name="error">#B4402C</color>
+
+    <!-- Sammlungsfarben: Marker-Punkt, Badge-Text, Icon-Tile. Nie als Fläche. -->
+    <color name="coll_auflaeufe">#C2793A</color>
+    <color name="coll_fleisch">#C55340</color>
+    <color name="coll_nudeln">#B8862F</color>
+    <color name="coll_leicht">#468F5E</color>
+    <color name="coll_suppen">#B96A43</color>
+    <color name="coll_fisch">#4C8DA6</color>
+    <color name="coll_wok">#9A5D9C</color>
+
+    <!-- Weitere Flächen -->
+    <color name="photo_placeholder">#EDE6D9</color>
+    <color name="white_92">#EBFFFFFF</color>
+    <color name="checkbox_stroke">#CFC3B2</color>
+    <color name="ingredient_checked">#A8998A</color>
+    <color name="note_stroke">#99BEC88C</color>
+    <color name="note_label">#5C7038</color>
+    <color name="note_text">#3E3020</color>
+    <color name="note_fill">#70D6DCA8</color>
+    <color name="step_number">#D3A184</color>
+    <color name="status_open">#B96A43</color>
+    <color name="sheet_handle">#D9CFBE</color>
+    <color name="indicator_inactive">#66FFFFFF</color>
 </resources>

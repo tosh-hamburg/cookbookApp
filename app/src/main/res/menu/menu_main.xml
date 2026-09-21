@@ -13,7 +13,13 @@
         android:id="@+id/action_weekly_planner"
         android:icon="@drawable/ic_calendar"
         android:title="@string/weekly_planner"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_collections"
+        android:icon="@drawable/ic_collections"
+        android:title="@string/collections"
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_refresh"

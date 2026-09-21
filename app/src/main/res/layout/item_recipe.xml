@@ -1,70 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Listenkarte im Querformat: Foto links, Angaben rechts. -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardRecipe"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@color/card_background">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="14dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@color/card_background"
+    app:cardCornerRadius="@dimen/card_corner_radius"
+    app:cardElevation="@dimen/card_elevation"
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:padding="12dp">
 
-        <!-- Recipe Image -->
-        <ImageView
-            android:id="@+id/ivRecipeImage"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:scaleType="centerCrop"
-            tools:src="@drawable/placeholder_recipe" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="@dimen/recipe_row_thumb"
+            android:layout_height="@dimen/recipe_row_thumb"
+            app:cardCornerRadius="@dimen/slot_corner_radius"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
 
-        <!-- Content -->
+            <ImageView
+                android:id="@+id/ivRecipeImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                tools:src="@drawable/placeholder_recipe" />
+
+        </com.google.android.material.card.MaterialCardView>
+
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:minHeight="@dimen/recipe_row_thumb"
+            android:orientation="vertical">
 
-            <!-- Title -->
+            <!-- Sammlungs-Marker -->
+            <LinearLayout
+                android:id="@+id/collectionRow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/collectionMarker"
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:background="@drawable/bg_collection_marker" />
+
+                <TextView
+                    android:id="@+id/tvCollection"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:ellipsize="end"
+                    android:letterSpacing="0.1"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Label"
+                    tools:text="AUFLÄUFE" />
+
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:ellipsize="end"
                 android:maxLines="2"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                tools:text="Spaghetti Carbonara" />
+                android:textAppearance="@style/TextAppearance.Cookbook.CardTitle"
+                tools:text="Kürbissuppe mit Kokosmilch" />
 
-            <!-- Categories -->
             <TextView
                 android:id="@+id/tvCategories"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/text_hint"
-                android:textSize="12sp"
-                tools:text="Abendessen • Italienisch" />
+                android:textAppearance="@style/TextAppearance.Cookbook.Caption"
+                tools:text="Hokkaido · Kokosmilch" />
 
-            <!-- Time -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:minHeight="6dp" />
+
+            <!-- Fußzeile: Zeit, Portionen, Herz -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:id="@+id/iconTime"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="@null"
                     android:src="@drawable/ic_time"
                     app:tint="@color/primary" />
 
@@ -73,9 +120,43 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:textColor="@color/text_secondary"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Number"
                     android:textSize="12sp"
-                    tools:text="30 Min." />
+                    tools:text="55 Min" />
+
+                <ImageView
+                    android:id="@+id/iconServings"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_servings"
+                    app:tint="@color/secondary" />
+
+                <TextView
+                    android:id="@+id/tvServings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Number"
+                    android:textSize="12sp"
+                    tools:text="4" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageButton
+                    android:id="@+id/btnFavorite"
+                    android:layout_width="@dimen/touch_target"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_marginEnd="-10dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/favorite"
+                    android:padding="15dp"
+                    android:src="@drawable/ic_heart"
+                    app:tint="@color/favorite_inactive" />
 
             </LinearLayout>
 

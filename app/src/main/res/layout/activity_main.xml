@@ -11,19 +11,94 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary">
+        android:background="@color/background"
+        app:elevation="0dp">
 
+        <!-- Toolbar trägt Papier, nicht Terrakotta -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
-            app:title="@string/app_name"
-            app:titleTextColor="@color/text_on_primary"
-            app:subtitleTextColor="@color/text_on_primary"
-            app:navigationIconTint="@color/text_on_primary"
+            android:layout_height="@dimen/toolbar_height"
+            android:background="@drawable/bg_toolbar_divider"
+            android:contentInsetStart="16dp"
+            android:contentInsetEnd="8dp"
+            app:contentInsetStartWithNavigation="16dp"
             android:theme="@style/ThemeOverlay.Cookbook.Toolbar"
-            app:popupTheme="@style/ThemeOverlay.Material3.Light" />
+            app:popupTheme="@style/ThemeOverlay.Material3.Light">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Wortmarke + Punkt in Terrakotta -->
+                <TextView
+                    android:id="@+id/textWordmark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_wordmark"
+                    android:textAppearance="@style/TextAppearance.Cookbook.ScreenTitle" />
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/bg_circle_white92"
+                    android:backgroundTint="@color/primary" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <FrameLayout
+                    android:id="@+id/avatarContainer"
+                    android:layout_width="@dimen/touch_target"
+                    android:layout_height="@dimen/touch_target"
+                    android:background="?attr/selectableItemBackgroundBorderless">
+
+                    <TextView
+                        android:id="@+id/textAvatar"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_avatar_circle"
+                        android:fontFamily="@font/figtree_semibold"
+                        android:gravity="center"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="13sp"
+                        tools:text="TD" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.appbar.MaterialToolbar>
+
+        <!-- Filterleiste: horizontal scrollende Mehrfachauswahl -->
+        <HorizontalScrollView
+            android:id="@+id/filterScroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupFilters"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipSpacingHorizontal="8dp"
+                app:singleLine="true"
+                app:singleSelection="false" />
+
+        </HorizontalScrollView>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -33,149 +108,77 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <!-- Compact Filter Bar -->
-            <LinearLayout
-                android:id="@+id/filterBar"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewRecipes"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="8dp"
-                android:background="@color/surface">
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="96dp"
+                tools:listitem="@layout/item_recipe" />
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_filter"
-                    app:tint="@color/text_secondary"
-                    android:layout_marginEnd="8dp"
-                    android:contentDescription="@string/filter" />
+            <!-- Leerzustand: Serif-Titel statt Emoji -->
+            <LinearLayout
+                android:id="@+id/emptyStateContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-                <!-- Category Filter Button -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnFilterCategory"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                <TextView
+                    android:id="@+id/textEmptyStateTitle"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="@string/all_categories"
-                    android:textSize="13sp"
-                    android:layout_marginEnd="8dp"
-                    app:icon="@drawable/ic_category"
-                    app:iconSize="16dp"
-                    app:cornerRadius="18dp" />
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/empty_first_recipe_title"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Section" />
 
-                <!-- Collection Filter Button -->
+                <TextView
+                    android:id="@+id/textEmptyStateHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="@string/empty_first_recipe_hint"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Body" />
+
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnFilterCollections"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:id="@+id/btnEmptyImport"
+                    style="@style/Theme.Cookbook.Button"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="@string/collections"
-                    android:textSize="13sp"
-                    android:layout_marginEnd="8dp"
-                    app:icon="@drawable/ic_collections"
-                    app:iconSize="16dp"
-                    app:cornerRadius="18dp" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <!-- Clear Filters Button (visible when filters active) -->
-                <ImageButton
-                    android:id="@+id/btnClearFilters"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:src="@drawable/ic_close"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/clear_filters"
-                    android:visibility="gone"
-                    app:tint="@color/text_secondary" />
+                    android:layout_height="@dimen/pill_height"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/import_recipe_cta" />
 
             </LinearLayout>
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminateTint="@color/primary"
+                android:visibility="gone" />
 
-                <!-- Recipe List -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerViewRecipes"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="8dp"
-                    android:clipToPadding="false"
-                    tools:listitem="@layout/item_recipe" />
-
-                <!-- Empty State -->
-                <LinearLayout
-                    android:id="@+id/emptyStateContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    android:padding="32dp">
-
-                    <TextView
-                        android:id="@+id/textEmptyStateIcon"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/empty_state_icon_cooking"
-                        android:textSize="72sp" />
-
-                    <TextView
-                        android:id="@+id/textEmptyStateTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="@string/no_recipes"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
-
-                    <TextView
-                        android:id="@+id/textEmptyStateHint"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center"
-                        android:text="@string/add_first_recipe"
-                        android:textColor="@color/text_secondary" />
-
-                </LinearLayout>
-
-                <!-- Loading Indicator -->
-                <ProgressBar
-                    android:id="@+id/progressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:visibility="gone" />
-
-            </FrameLayout>
-
-        </LinearLayout>
+        </FrameLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- FAB for adding recipes -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabImport"
+        style="@style/Theme.Cookbook.FAB.Extended"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_add"
+        android:layout_margin="@dimen/fab_margin"
         android:contentDescription="@string/add_recipe"
-        app:backgroundTint="@color/primary"
-        app:tint="@color/text_on_primary" />
+        android:text="@string/fab_add_recipe"
+        app:icon="@drawable/ic_add" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

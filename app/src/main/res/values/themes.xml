@@ -1,118 +1,216 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Design-System "Küchentisch 1.0" — Themes und Widget-Styles. -->
 <resources>
 
     <style name="Theme.Cookbook" parent="Theme.Material3.Light.NoActionBar">
-        <!-- Primary brand color -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_variant</item>
         <item name="colorOnPrimary">@color/text_on_primary</item>
-        
-        <!-- Secondary brand color -->
+
         <item name="colorSecondary">@color/secondary</item>
         <item name="colorSecondaryVariant">@color/secondary_variant</item>
         <item name="colorOnSecondary">@color/text_on_secondary</item>
-        
-        <!-- Status bar color -->
-        <item name="android:statusBarColor">@color/primary_variant</item>
-        <item name="android:navigationBarColor">@color/surface</item>
-        
-        <!-- Background -->
+
+        <!-- Die Statusleiste trägt Papier, nicht Terrakotta -->
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
         <item name="android:colorBackground">@color/background</item>
         <item name="colorSurface">@color/surface</item>
-        
-        <!-- Error color -->
         <item name="colorError">@color/error</item>
-        
-        <!-- Window -->
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">true</item>
-        
-        <!-- Popup Menu - fix text color -->
+
         <item name="popupMenuStyle">@style/Theme.Cookbook.PopupMenu</item>
         <item name="actionOverflowMenuStyle">@style/Theme.Cookbook.PopupMenu</item>
+
+        <!-- Figtree als Grundschrift für alles, was keinen eigenen Style hat -->
+        <item name="android:fontFamily">@font/figtree_regular</item>
+        <item name="fontFamily">@font/figtree_regular</item>
+
+        <item name="bottomSheetDialogTheme">@style/Theme.Cookbook.BottomSheetDialog</item>
     </style>
-    
-    <!-- Popup Menu Style with proper text colors -->
+
     <style name="Theme.Cookbook.PopupMenu" parent="Widget.Material3.PopupMenu">
         <item name="android:popupBackground">@color/surface</item>
     </style>
-    
-    <!-- Toolbar Text Appearances -->
-    <style name="TextAppearance.Cookbook.Toolbar.Collapsed" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:textColor">@color/text_on_primary</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-    
-    <style name="TextAppearance.Cookbook.Toolbar.Expanded" parent="TextAppearance.Material3.HeadlineLarge">
-        <item name="android:textColor">@color/text_on_primary</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:shadowColor">#80000000</item>
-        <item name="android:shadowDx">1</item>
-        <item name="android:shadowDy">1</item>
-        <item name="android:shadowRadius">3</item>
-    </style>
-    
-    <!-- Toolbar Style -->
+
+    <!-- ===== Toolbar ===== -->
     <style name="Theme.Cookbook.Toolbar" parent="Widget.Material3.Toolbar">
-        <item name="android:background">@color/primary</item>
-        <item name="titleTextColor">@color/text_on_primary</item>
-        <item name="subtitleTextColor">@color/text_on_primary</item>
+        <item name="android:background">@color/background</item>
+        <item name="titleTextColor">@color/text_primary</item>
+        <item name="subtitleTextColor">@color/text_secondary</item>
     </style>
-    
-    <!-- Toolbar Theme Overlay for white icons -->
+
+    <!-- Icons und Menütexte in Tinte -->
     <style name="ThemeOverlay.Cookbook.Toolbar" parent="">
+        <item name="colorControlNormal">@color/text_secondary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="actionMenuTextColor">@color/text_primary</item>
+    </style>
+
+    <!-- Toolbar über dem Foto: Icons weiß -->
+    <style name="ThemeOverlay.Cookbook.Toolbar.OnPhoto" parent="">
         <item name="colorControlNormal">@color/text_on_primary</item>
         <item name="android:textColorPrimary">@color/text_on_primary</item>
         <item name="android:textColorSecondary">@color/text_on_primary</item>
         <item name="actionMenuTextColor">@color/text_on_primary</item>
     </style>
-    
-    <!-- Card Style -->
+
+    <style name="TextAppearance.Cookbook.Toolbar.Collapsed" parent="TextAppearance.Cookbook.RecipeTitle.Collapsed" />
+
+    <style name="TextAppearance.Cookbook.Toolbar.Expanded" parent="TextAppearance.Cookbook.RecipeTitle" />
+
+    <!-- ===== Karte ===== -->
     <style name="Theme.Cookbook.Card" parent="Widget.Material3.CardView.Elevated">
         <item name="cardBackgroundColor">@color/card_background</item>
-        <item name="cardCornerRadius">16dp</item>
-        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">@dimen/card_corner_radius</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
         <item name="strokeColor">@color/card_stroke</item>
         <item name="strokeWidth">0dp</item>
     </style>
-    
-    <!-- Button Styles -->
+
+    <!-- ===== Buttons: Pill, volle Höhe ===== -->
     <style name="Theme.Cookbook.Button" parent="Widget.Material3.Button">
         <item name="backgroundTint">@color/primary</item>
         <item name="android:textColor">@color/text_on_primary</item>
-        <item name="cornerRadius">12dp</item>
+        <item name="iconTint">@color/text_on_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cookbook.Ui</item>
+        <item name="android:textColorLink">@color/text_on_primary</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:minHeight">@dimen/pill_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
     </style>
-    
+
+    <!-- Sekundäraktionen sind Tinte, nicht Terrakotta -->
     <style name="Theme.Cookbook.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="strokeColor">@color/primary</item>
-        <item name="android:textColor">@color/primary</item>
-        <item name="cornerRadius">12dp</item>
+        <item name="strokeColor">@color/text_primary</item>
+        <item name="strokeWidth">1.5dp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="iconTint">@color/text_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cookbook.Ui</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:minHeight">@dimen/pill_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
     </style>
-    
-    <!-- Chip Style -->
+
+    <!-- Runder Outlined-Icon-Button (48 bzw. 52dp) -->
+    <style name="Theme.Cookbook.Button.Outlined.Icon">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="iconPadding">0dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="cornerRadius">26dp</item>
+    </style>
+
+    <!-- ===== Chip: aktiv = Tinte ===== -->
     <style name="Theme.Cookbook.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_background_selector</item>
+        <item name="android:textColor">@color/chip_text_selector</item>
+        <item name="chipStrokeColor">@color/chip_stroke_selector</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipCornerRadius">18dp</item>
+        <item name="chipMinHeight">@dimen/chip_height</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cookbook.Ui.Small</item>
+        <item name="chipIconVisible">false</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+        <item name="ensureMinTouchTargetSize">true</item>
+    </style>
+
+    <!-- Kategorie-Chip im Detail, nicht auswählbar -->
+    <style name="Theme.Cookbook.Chip.Static" parent="Widget.Material3.Chip.Assist">
         <item name="chipBackgroundColor">@color/chip_background</item>
         <item name="android:textColor">@color/chip_text</item>
-        <item name="chipCornerRadius">20dp</item>
+        <item name="chipStrokeColor">@color/chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipCornerRadius">18dp</item>
+        <item name="chipMinHeight">@dimen/chip_height</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cookbook.Ui.Small</item>
+        <item name="chipIconVisible">false</item>
     </style>
-    
-    <!-- Text Input Style -->
+
+    <!-- ===== Texteingabe ===== -->
     <style name="Theme.Cookbook.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
-        <item name="boxCornerRadiusTopStart">12dp</item>
-        <item name="boxCornerRadiusTopEnd">12dp</item>
-        <item name="boxCornerRadiusBottomStart">12dp</item>
-        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="boxCornerRadiusTopStart">@dimen/tile_corner_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/tile_corner_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/tile_corner_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/tile_corner_radius</item>
         <item name="boxStrokeColor">@color/primary</item>
         <item name="hintTextColor">@color/primary</item>
     </style>
-    
-    <!-- FAB Style -->
+
+    <!-- ===== FAB ===== -->
     <style name="Theme.Cookbook.FAB" parent="Widget.Material3.FloatingActionButton.Primary">
         <item name="backgroundTint">@color/primary</item>
         <item name="tint">@color/text_on_primary</item>
     </style>
-    
-    <!-- NoActionBar variant for Login -->
+
+    <style name="Theme.Cookbook.FAB.Extended" parent="Widget.Material3.ExtendedFloatingActionButton.Primary">
+        <item name="backgroundTint">@color/primary</item>
+        <item name="iconTint">@color/text_on_primary</item>
+        <item name="android:textColor">@color/text_on_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cookbook.Ui</item>
+        <item name="elevation">@dimen/fab_elevation</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Cookbook.Fab</item>
+    </style>
+
+    <style name="ShapeAppearance.Cookbook.Fab" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">18dp</item>
+    </style>
+
+    <!-- ===== BottomSheet ===== -->
+    <style name="Theme.Cookbook.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Theme.Cookbook.BottomSheet</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:navigationBarColor">@color/background</item>
+    </style>
+
+    <style name="Theme.Cookbook.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@color/background</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Cookbook.BottomSheet</item>
+    </style>
+
+    <style name="ShapeAppearance.Cookbook.BottomSheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">@dimen/sheet_corner_radius</item>
+        <item name="cornerSizeTopRight">@dimen/sheet_corner_radius</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <!-- ===== Kochmodus: Vollbild, dunkel ===== -->
+    <style name="Theme.Cookbook.CookMode" parent="Theme.Cookbook">
+        <item name="android:colorBackground">@color/cook_bg</item>
+        <item name="android:statusBarColor">@color/cook_bg</item>
+        <item name="android:navigationBarColor">@color/cook_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:textColorPrimary">@color/cook_fg</item>
+    </style>
+
+    <!-- Kochmodus-Buttons -->
+    <style name="Theme.Cookbook.Button.CookOutlined" parent="Theme.Cookbook.Button.Outlined">
+        <item name="strokeColor">@color/cook_outline</item>
+        <item name="android:textColor">@color/cook_fg</item>
+        <item name="iconTint">@color/cook_fg</item>
+        <item name="rippleColor">@color/cook_pill_bg</item>
+    </style>
+
+    <style name="Theme.Cookbook.Button.Accent" parent="Theme.Cookbook.Button">
+        <item name="backgroundTint">@color/accent</item>
+        <item name="android:textColor">@color/text_on_accent</item>
+        <item name="iconTint">@color/text_on_accent</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="cornerRadius">22dp</item>
+    </style>
+
+    <!-- NoActionBar-Variante für den Login -->
     <style name="Theme.Cookbook.NoActionBar" parent="Theme.Cookbook">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

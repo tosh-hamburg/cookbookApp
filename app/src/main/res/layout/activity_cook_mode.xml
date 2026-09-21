@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kochmodus: Vollbild, dunkel, ein Schritt pro Seite. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cook_bg"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <!-- Kopfzeile -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:paddingTop="8dp">
+
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cancel"
+            android:padding="11dp"
+            android:src="@drawable/ic_close"
+            app:tint="@color/cook_fg" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textRecipeTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.Cookbook.Serif"
+                android:textColor="@color/text_on_primary"
+                android:textSize="18sp"
+                tools:text="Kürbissuppe mit Kokosmilch" />
+
+            <TextView
+                android:id="@+id/textServings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Cookbook.Number"
+                android:textColor="@color/cook_fg_dim"
+                android:textSize="12sp"
+                tools:text="4 Portionen" />
+
+        </LinearLayout>
+
+        <!-- Status-Pille: der Bildschirm bleibt an -->
+        <TextView
+            android:id="@+id/textWakeLock"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_pill_white8"
+            android:contentDescription="@string/screen_stays_on"
+            android:fontFamily="@font/figtree_medium"
+            android:gravity="center"
+            android:paddingHorizontal="14dp"
+            android:text="@string/screen_on_short"
+            android:textColor="@color/cook_fg"
+            android:textSize="11.5sp" />
+
+    </LinearLayout>
+
+    <!-- Fortschritt: ein Balken pro Schritt -->
+    <LinearLayout
+        android:id="@+id/progressRow"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginHorizontal="20dp"
+        android:orientation="horizontal" />
+
+    <TextView
+        android:id="@+id/textStepCounter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:fontFamily="@font/figtree_bold"
+        android:letterSpacing="0.16"
+        android:textAllCaps="true"
+        android:textColor="@color/accent"
+        android:textSize="11sp"
+        tools:text="Schritt 03 von 05" />
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPagerSteps"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/textNoSteps"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="32dp"
+        android:text="@string/no_steps"
+        android:textAppearance="@style/TextAppearance.Cookbook.Body"
+        android:textColor="@color/cook_fg_dim"
+        android:visibility="gone" />
+
+    <!-- Timer -->
+    <LinearLayout
+        android:id="@+id/timerBlock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:background="@drawable/bg_cook_timer"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/textTimer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.Cookbook.Number.Timer"
+            tools:text="12:00" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTimer"
+            style="@style/Theme.Cookbook.Button.Accent"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:text="@string/start_timer" />
+
+    </LinearLayout>
+
+    <!-- Navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPrevious"
+            style="@style/Theme.Cookbook.Button.CookOutlined"
+            android:layout_width="96dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/cook_back"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="0dp"
+            app:icon="@drawable/ic_chevron_left"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="22dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNext"
+            style="@style/Theme.Cookbook.Button"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="@string/cook_next" />
+
+    </LinearLayout>
+
+</LinearLayout>

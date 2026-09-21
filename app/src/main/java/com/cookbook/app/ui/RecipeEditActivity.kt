@@ -37,6 +37,15 @@ class RecipeEditActivity : AppCompatActivity() {
         private const val TAG = "RecipeEditActivity"
         const val EXTRA_RECIPE_ID = "extra_recipe_id"
         const val EXTRA_IMPORTED_DATA = "extra_imported_data"
+
+        /**
+         * Öffnet direkt Kamera oder Galerie — das "Rezept hinzufügen"-Sheet
+         * springt mit dieser Angabe hierher, damit der Nutzer nicht erst im
+         * leeren Formular nach dem Bildknopf suchen muss.
+         */
+        const val EXTRA_LAUNCH_PICKER = "extra_launch_picker"
+        const val PICKER_CAMERA = "camera"
+        const val PICKER_GALLERY = "gallery"
     }
     
     private lateinit var binding: ActivityRecipeEditBinding
@@ -99,6 +108,18 @@ class RecipeEditActivity : AppCompatActivity() {
         
         // Load data - categories first, then recipe/import data
         loadData()
+        launchRequestedPicker()
+    }
+
+    /** Kamera bzw. Galerie sofort öffnen, wenn das Sheet danach gefragt hat. */
+    private fun launchRequestedPicker() {
+        val picker = intent.getStringExtra(EXTRA_LAUNCH_PICKER) ?: return
+        // Einmalig: nach einer Drehung darf die Kamera nicht erneut aufspringen.
+        intent.removeExtra(EXTRA_LAUNCH_PICKER)
+        when (picker) {
+            PICKER_CAMERA -> checkCameraPermissionAndLaunch()
+            PICKER_GALLERY -> checkStoragePermissionAndLaunch()
+        }
     }
     
     private fun loadData() {

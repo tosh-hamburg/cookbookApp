@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Design-System "Küchentisch 1.0" — Typografie.
+
+    Instrument Serif → Rezepttitel, Screen-Titel, Sektionsüberschriften
+    Figtree          → alle UI-Texte, Buttons, Fließtext
+    JetBrains Mono   → jede Zahl (Zeiten, Mengen, Portionen, kcal, Timer, Datum)
+
+    Die Schnitte werden einzeln referenziert statt über eine font-family mit
+    android:fontWeight — textFontWeight gibt es erst ab API 28, minSdk ist 26.
+-->
+<resources>
+
+    <!-- ===== Serif: Titel ===== -->
+    <style name="TextAppearance.Cookbook.Serif" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/instrument_serif_regular</item>
+        <item name="fontFamily">@font/instrument_serif_regular</item>
+        <item name="android:letterSpacing">-0.015</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Wortmarke / Screen-Titel in der Toolbar -->
+    <style name="TextAppearance.Cookbook.ScreenTitle" parent="TextAppearance.Cookbook.Serif">
+        <item name="android:textSize">24sp</item>
+    </style>
+
+    <!-- Screen-Titel der Unterseiten (Wochenplan) -->
+    <style name="TextAppearance.Cookbook.ScreenTitle.Small">
+        <item name="android:textSize">22sp</item>
+    </style>
+
+    <!-- Rezepttitel über dem Foto -->
+    <style name="TextAppearance.Cookbook.RecipeTitle" parent="TextAppearance.Cookbook.Serif">
+        <item name="android:textSize">28sp</item>
+        <item name="android:textColor">@color/text_on_primary</item>
+    </style>
+
+    <!-- Rezepttitel in der eingeklappten Toolbar -->
+    <style name="TextAppearance.Cookbook.RecipeTitle.Collapsed">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Sektionstitel ("Zutaten", "Zubereitung", "Meine Sammlung") -->
+    <style name="TextAppearance.Cookbook.Section" parent="TextAppearance.Cookbook.Serif">
+        <item name="android:textSize">24sp</item>
+    </style>
+
+    <!-- Kartentitel in der Rezeptliste -->
+    <style name="TextAppearance.Cookbook.CardTitle" parent="TextAppearance.Cookbook.Serif">
+        <item name="android:textSize">19sp</item>
+    </style>
+
+    <!-- Slot-Titel im Wochenplaner -->
+    <style name="TextAppearance.Cookbook.SlotTitle" parent="TextAppearance.Cookbook.Serif">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- Schrittnummer in der Zubereitung -->
+    <style name="TextAppearance.Cookbook.StepNumber" parent="TextAppearance.Cookbook.Serif">
+        <item name="android:textSize">30sp</item>
+        <item name="android:textColor">@color/step_number</item>
+    </style>
+
+    <!-- ===== Figtree: UI ===== -->
+    <style name="TextAppearance.Cookbook.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/figtree_regular</item>
+        <item name="fontFamily">@font/figtree_regular</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Fließtext mit größerem Zeilenabstand (Schritttexte) -->
+    <style name="TextAppearance.Cookbook.Body.Loose">
+        <item name="android:lineSpacingMultiplier">1.6</item>
+    </style>
+
+    <!-- Sachzeile / Hinweiszeile -->
+    <style name="TextAppearance.Cookbook.Caption" parent="TextAppearance.Cookbook.Body">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_hint</item>
+    </style>
+
+    <!-- Buttons und UI-Text -->
+    <style name="TextAppearance.Cookbook.Ui" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/figtree_semibold</item>
+        <item name="fontFamily">@font/figtree_semibold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextAppearance.Cookbook.Ui.Small">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Schritttext im Kochmodus -->
+    <style name="TextAppearance.Cookbook.CookStep" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/figtree_medium</item>
+        <item name="fontFamily">@font/figtree_medium</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:lineSpacingMultiplier">1.42</item>
+        <item name="android:textColor">@color/text_on_primary</item>
+    </style>
+
+    <!-- Versal-Label -->
+    <style name="TextAppearance.Cookbook.Label" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/figtree_bold</item>
+        <item name="fontFamily">@font/figtree_bold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textColor">@color/text_hint</item>
+    </style>
+
+    <style name="TextAppearance.Cookbook.Label.Accent">
+        <item name="android:textSize">10.5sp</item>
+        <item name="android:letterSpacing">0.14</item>
+        <item name="android:textColor">@color/primary</item>
+    </style>
+
+    <!-- Metrik-Spaltenlabel -->
+    <style name="TextAppearance.Cookbook.Label.Metric">
+        <item name="android:fontFamily">@font/figtree_semibold</item>
+        <item name="fontFamily">@font/figtree_semibold</item>
+        <item name="android:textSize">9.5sp</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <!-- ===== JetBrains Mono: Zahlen ===== -->
+    <style name="TextAppearance.Cookbook.Number" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <style name="TextAppearance.Cookbook.Number.Bold">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="fontFamily">@font/jetbrains_mono_bold</item>
+    </style>
+
+    <!-- Metrik-Wert -->
+    <style name="TextAppearance.Cookbook.Number.Metric">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Portions-Stepper -->
+    <style name="TextAppearance.Cookbook.Number.Stepper">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Timer im Kochmodus -->
+    <style name="TextAppearance.Cookbook.Number.Timer">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">34sp</item>
+        <item name="android:textColor">@color/text_on_primary</item>
+    </style>
+</resources>

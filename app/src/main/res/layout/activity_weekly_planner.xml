@@ -11,154 +11,122 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary">
+        android:background="@color/background"
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
-            app:title="@string/weekly_planner"
-            app:titleTextColor="@color/text_on_primary"
-            app:subtitleTextColor="@color/text_on_primary"
-            app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="@color/text_on_primary"
+            android:layout_height="@dimen/toolbar_height"
+            android:background="@color/background"
             android:theme="@style/ThemeOverlay.Cookbook.Toolbar"
-            app:popupTheme="@style/ThemeOverlay.Material3.Light" />
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@color/text_secondary"
+            app:popupTheme="@style/ThemeOverlay.Material3.Light">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/week_plan"
+                    android:textAppearance="@style/TextAppearance.Cookbook.ScreenTitle.Small" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageButton
+                    android:id="@+id/btnPreviousWeek"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/previous_week"
+                    android:padding="11dp"
+                    android:src="@drawable/ic_chevron_left"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/textCalendarWeek"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:minWidth="52dp"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Number.Bold"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    tools:text="KW 39" />
+
+                <ImageButton
+                    android:id="@+id/btnNextWeek"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/next_week"
+                    android:padding="11dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/text_primary" />
+
+            </LinearLayout>
+
+        </com.google.android.material.appbar.MaterialToolbar>
+
+        <!-- Zeitraum und Belegung -->
+        <TextView
+            android:id="@+id/textWeekRange"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="12dp"
+            android:textAppearance="@style/TextAppearance.Cookbook.Caption"
+            tools:text="22.–28. September · 8 von 21 Mahlzeiten belegt" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="120dp">
 
-            <!-- Week Navigation Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <!-- Week Range & Calendar Week -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/textWeekRange"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary"
-                            tools:text="13.01.2026 - 19.01.2026" />
-
-                        <TextView
-                            android:id="@+id/textCalendarWeek"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"
-                            tools:text="KW 3" />
-
-                    </LinearLayout>
-
-                    <!-- Navigation Buttons -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <ImageButton
-                            android:id="@+id/btnPreviousWeek"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/ic_chevron_left"
-                            app:tint="@color/text_primary"
-                            android:contentDescription="@string/previous_week" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnCurrentWeek"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="4dp"
-                            android:text="@string/this_week"
-                            android:textSize="12sp"
-                            android:minWidth="0dp"
-                            android:paddingHorizontal="12dp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnNextUpcomingWeek"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="4dp"
-                            android:text="@string/coming_week"
-                            android:textSize="12sp"
-                            android:minWidth="0dp"
-                            android:paddingHorizontal="12dp" />
-
-                        <ImageButton
-                            android:id="@+id/btnNextWeek"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/text_primary"
-                            android:contentDescription="@string/next_week" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Loading Indicator -->
             <ProgressBar
                 android:id="@+id/progressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginVertical="32dp"
+                android:indeterminateTint="@color/primary"
                 android:visibility="gone" />
 
-            <!-- Week Days Container -->
             <LinearLayout
                 android:id="@+id/daysContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
-            <!-- Ingredients Summary Card -->
+            <!-- Einkaufszettel: Inhalt, den die Leiste unten aufklappt -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardIngredients"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="4dp"
                 android:visibility="gone"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp"
+                app:cardCornerRadius="@dimen/tile_corner_radius"
+                app:cardElevation="@dimen/card_elevation"
+                app:strokeWidth="0dp"
                 tools:visibility="visible">
 
                 <LinearLayout
@@ -167,106 +135,89 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Header -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_shopping_cart"
-                            app:tint="@color/primary" />
-
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="8dp"
                             android:text="@string/aggregated_ingredients"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
+                            android:textAppearance="@style/TextAppearance.Cookbook.Section"
+                            android:textSize="20sp" />
 
                         <TextView
                             android:id="@+id/textIngredientCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Cookbook.Number"
                             android:textSize="12sp"
-                            android:textColor="@color/text_secondary"
-                            android:background="@drawable/chip_background"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="4dp"
                             tools:text="5 neu / 3 gesendet" />
 
                     </LinearLayout>
-                    
-                    <!-- Action Buttons Row -->
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="4dp"
                         android:orientation="horizontal">
-                        
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnRestoreExcluded"
                             style="@style/Widget.Material3.Button.TextButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/restore_excluded"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:visibility="gone"
                             app:icon="@drawable/ic_refresh"
                             app:iconSize="16dp"
-                            tools:visibility="visible" />
-                        
+                            app:iconTint="@color/text_secondary" />
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnResetSent"
                             style="@style/Widget.Material3.Button.TextButton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/reset_sent"
+                            android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:visibility="gone"
                             app:icon="@drawable/ic_refresh"
                             app:iconSize="16dp"
-                            tools:visibility="visible" />
-                        
+                            app:iconTint="@color/text_secondary" />
+
                     </LinearLayout>
 
-                    <!-- New Ingredients Section -->
                     <LinearLayout
                         android:id="@+id/sectionNewIngredients"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="8dp"
                         android:orientation="vertical"
                         android:visibility="gone"
                         tools:visibility="visible">
-                        
+
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/new_ingredients"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/primary"
-                            android:drawableStart="@drawable/ic_send"
-                            android:drawablePadding="8dp"
-                            app:drawableTint="@color/primary" />
-                        
+                            android:textAppearance="@style/TextAppearance.Cookbook.Label"
+                            android:textColor="@color/primary" />
+
                         <LinearLayout
                             android:id="@+id/newIngredientsContainer"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="4dp"
                             android:orientation="vertical" />
-                        
+
                     </LinearLayout>
-                    
-                    <!-- Already Sent Ingredients Section -->
+
                     <LinearLayout
                         android:id="@+id/sectionSentIngredients"
                         android:layout_width="match_parent"
@@ -275,28 +226,23 @@
                         android:orientation="vertical"
                         android:visibility="gone"
                         tools:visibility="visible">
-                        
+
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/already_sent"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/success"
-                            android:drawableStart="@drawable/ic_check"
-                            android:drawablePadding="8dp"
-                            app:drawableTint="@color/success" />
-                        
+                            android:textAppearance="@style/TextAppearance.Cookbook.Label"
+                            android:textColor="@color/success" />
+
                         <LinearLayout
                             android:id="@+id/sentIngredientsContainer"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="4dp"
                             android:orientation="vertical" />
-                        
+
                     </LinearLayout>
-                    
-                    <!-- Legacy container for backward compatibility -->
+
                     <LinearLayout
                         android:id="@+id/ingredientsListContainer"
                         android:layout_width="match_parent"
@@ -304,40 +250,32 @@
                         android:orientation="vertical"
                         android:visibility="gone" />
 
-                    <!-- Send to Gemini Buttons -->
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSendNewToGemini"
+                        style="@style/Theme.Cookbook.Button"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="@dimen/pill_height"
                         android:layout_marginTop="16dp"
-                        android:orientation="vertical">
-                        
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnSendNewToGemini"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/send_new_ingredients"
-                            android:visibility="gone"
-                            app:icon="@drawable/ic_send"
-                            app:iconGravity="start"
-                            tools:visibility="visible" />
-                        
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnSendToGemini"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/send_all_ingredients"
-                            app:icon="@drawable/ic_shopping_cart"
-                            app:iconGravity="start" />
-                        
-                    </LinearLayout>
+                        android:text="@string/send_new_ingredients"
+                        android:visibility="gone"
+                        app:icon="@drawable/ic_send"
+                        app:iconGravity="textStart"
+                        tools:visibility="visible" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSendToGemini"
+                        style="@style/Theme.Cookbook.Button.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/pill_height"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/send_all_ingredients"
+                        app:icon="@drawable/ic_shopping_cart"
+                        app:iconGravity="textStart" />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Empty State -->
             <LinearLayout
                 android:id="@+id/emptyStateContainer"
                 android:layout_width="match_parent"
@@ -348,34 +286,83 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:src="@drawable/ic_calendar"
-                    app:tint="@color/text_hint" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:gravity="center"
                     android:text="@string/no_meals_planned"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
+                    android:textAppearance="@style/TextAppearance.Cookbook.Section" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:gravity="center"
                     android:text="@string/add_meals_hint"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:gravity="center" />
+                    android:textAppearance="@style/TextAppearance.Cookbook.Body" />
 
             </LinearLayout>
 
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Einkaufszettel-Leiste, fest unten -->
+    <FrameLayout
+        android:id="@+id/shoppingBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_bottom_action_bar"
+        android:padding="12dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dark_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shopping_list_label"
+                    android:textAppearance="@style/TextAppearance.Cookbook.Label"
+                    android:textColor="@color/accent"
+                    android:textSize="9.5sp" />
+
+                <TextView
+                    android:id="@+id/textShoppingSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/figtree_regular"
+                    android:textColor="@color/cook_fg"
+                    android:textSize="14sp"
+                    tools:text="18 Positionen aus 8 Mahlzeiten" />
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenShoppingList"
+                style="@style/Theme.Cookbook.Button.Accent"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                android:text="@string/open_action" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -13,25 +13,28 @@ import androidx.appcompat.widget.SearchView
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cookbook.app.R
-import com.cookbook.app.data.api.ApiClient
 import com.cookbook.app.data.models.CookbookCollection
+import com.cookbook.app.data.models.FeaturedRecipe
 import com.cookbook.app.data.models.RecipeListItem
 import com.cookbook.app.data.repository.AuthRepository
 import com.cookbook.app.data.repository.RecipeRepository
 import com.cookbook.app.databinding.ActivityMainBinding
 import com.cookbook.app.ui.adapter.RecipeAdapter
+import com.cookbook.app.ui.adapter.RecipeListHeaderAdapter
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Main activity showing recipe list with pagination
+ * Rezeptliste — stöbern, filtern, sich für heute entscheiden.
  */
 class MainActivity : AppCompatActivity() {
-    
+
     companion object {
         private const val TAG = "MainActivity"
         private const val PAGE_SIZE = 20
@@ -43,27 +46,40 @@ class MainActivity : AppCompatActivity() {
          */
         private const val SEARCH_DEBOUNCE_MS = 300L
     }
-    
+
+    /** Ein Filter-Chip steht entweder für eine Sammlung oder für eine Kategorie. */
+    private sealed interface FilterChip {
+        data object All : FilterChip
+        data class Collection(val id: String, val name: String) : FilterChip
+        data class Category(val name: String) : FilterChip
+    }
+
     private lateinit var binding: ActivityMainBinding
     private val authRepository by lazy { AuthRepository() }
     private val recipeRepository by lazy { RecipeRepository() }
     private val credentialManager by lazy { CredentialManager.create(this) }
     private lateinit var recipeAdapter: RecipeAdapter
-    
+    private lateinit var headerAdapter: RecipeListHeaderAdapter
+
     // Pagination state
     private var allRecipes: MutableList<RecipeListItem> = mutableListOf()
     private var currentOffset = 0
     private var hasMore = true
     private var isLoadingMore = false
     private var totalRecipes = 0
-    
+
     // Filter state
     private var categories: List<String> = emptyList()
     private var collections: List<CookbookCollection> = emptyList()
     private var selectedCategory: String? = null
-    private var selectedCollections: MutableSet<String> = mutableSetOf() // Set of collection IDs
+    private var selectedCollections: MutableSet<String> = mutableSetOf()
     private var searchQuery: String = ""
     private var searchJob: Job? = null
+
+    private var featured: FeaturedRecipe? = null
+
+    /** Die Eintritts-Animation gehört zum ersten Öffnen, nicht zu jeder Rückkehr. */
+    private var hasAnimatedInitialLoad = false
 
     /**
      * Zählt die Ladevorgänge. Antworten einer älteren Suche/Filterung dürfen die
@@ -74,267 +90,250 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Check if user is logged in, redirect to login if not
+
         if (!authRepository.isLoggedIn()) {
             navigateToLogin()
             return
         }
-        
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         setupToolbar()
         setupRecyclerView()
         setupSwipeRefresh()
         setupFab()
-        setupFilterButtons()
-        
+
         loadData()
     }
-    
+
     private fun navigateToLogin() {
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
-    
+
     override fun onResume() {
         super.onResume()
-        
-        // Check if still logged in
+
         if (!authRepository.isLoggedIn()) {
             navigateToLogin()
             return
         }
-        
-        // Refresh data when returning from other activities
+
         resetAndLoadRecipes()
+        loadFeatured()
     }
-    
+
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
-        supportActionBar?.title = getString(R.string.app_name)
-        updateToolbarSubtitle()
+        // Die Wortmarke steckt als eigenes TextView im Toolbar-Slot.
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        binding.textAvatar.text = initialsOfCurrentUser()
+        binding.avatarContainer.setOnClickListener { showAccountMenu() }
     }
-    
-    private fun updateToolbarSubtitle() {
-        val user = authRepository.getCachedUser()
-        val collectionInfo = if (selectedCollections.isNotEmpty()) {
-            val selectedNames = collections
-                .filter { selectedCollections.contains(it.id) }
-                .map { it.name }
-            " • 📁 ${selectedNames.joinToString(", ")}"
-        } else ""
-        supportActionBar?.subtitle = "${user?.displayName ?: getString(R.string.unknown)}$collectionInfo"
+
+    /** Initialen für den Avatar-Kreis; ohne Namen bleibt ein neutrales Zeichen. */
+    private fun initialsOfCurrentUser(): String {
+        val name = authRepository.getCachedUser()?.displayName?.trim().orEmpty()
+        if (name.isEmpty()) return "·"
+        return name.split(Regex("\\s+"))
+            .filter { it.isNotBlank() }
+            .take(2)
+            .joinToString("") { it.first().uppercase() }
     }
-    
+
+    private fun showAccountMenu() {
+        val name = authRepository.getCachedUser()?.displayName ?: getString(R.string.unknown)
+        AlertDialog.Builder(this)
+            .setTitle(name)
+            .setItems(arrayOf(getString(R.string.weekly_planner), getString(R.string.logout))) { _, which ->
+                when (which) {
+                    0 -> openWeeklyPlanner()
+                    1 -> performLogout()
+                }
+            }
+            .show()
+    }
+
     private fun setupRecyclerView() {
-        recipeAdapter = RecipeAdapter { recipe ->
-            openRecipeDetail(recipe)
-        }
-        
-        val layoutManager = GridLayoutManager(this, 2)
+        recipeAdapter = RecipeAdapter(
+            onRecipeClick = { recipe -> openRecipeDetail(recipe.id) },
+            onFavoriteClick = { recipe -> toggleFavorite(recipe) }
+        )
+        headerAdapter = RecipeListHeaderAdapter(
+            onFeaturedClick = { openRecipeDetail(it.id) },
+            onCookNow = { openCookMode(it.id) },
+            onSchedule = { scheduleFeatured(it) }
+        )
+
+        val layoutManager = LinearLayoutManager(this)
         binding.recyclerViewRecipes.apply {
             this.layoutManager = layoutManager
-            adapter = recipeAdapter
-            
-            // Infinite scroll listener
+            adapter = ConcatAdapter(headerAdapter, recipeAdapter)
+
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    
-                    if (dy > 0) { // Scrolling down
-                        val visibleItemCount = layoutManager.childCount
-                        val totalItemCount = layoutManager.itemCount
-                        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-                        
-                        // Load more when we're near the end (5 items before the end)
-                        if (!isLoadingMore && hasMore) {
-                            if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5) {
-                                loadMoreRecipes()
-                            }
-                        }
+                    if (dy <= 0) return
+
+                    val visibleItemCount = layoutManager.childCount
+                    val totalItemCount = layoutManager.itemCount
+                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+
+                    if (!isLoadingMore && hasMore &&
+                        (visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
+                    ) {
+                        loadMoreRecipes()
                     }
                 }
             })
         }
     }
-    
+
     private fun setupSwipeRefresh() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             resetAndLoadRecipes()
+            loadFeatured()
         }
-        binding.swipeRefreshLayout.setColorSchemeResources(
-            R.color.primary,
-            R.color.secondary
-        )
+        binding.swipeRefreshLayout.setColorSchemeResources(R.color.primary, R.color.secondary)
     }
-    
+
     private fun setupFab() {
-        binding.fabImport.setOnClickListener {
-            showImportOptions()
-        }
+        binding.fabImport.setOnClickListener { showAddRecipeSheet() }
+        binding.btnEmptyImport.setOnClickListener { showAddRecipeSheet() }
     }
-    
-    private fun showImportOptions() {
-        val options = arrayOf("Rezept importieren (URL)", "Neues Rezept erstellen")
-        
-        AlertDialog.Builder(this)
-            .setTitle("Rezept hinzufügen")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> openImportActivity()
-                    1 -> openCreateRecipe()
-                }
-            }
-            .show()
+
+    private fun showAddRecipeSheet() {
+        AddRecipeBottomSheet().show(supportFragmentManager, "addRecipe")
     }
-    
+
     private fun loadData() {
         loadCollections()
         loadCategories()
+        loadFeatured()
         resetAndLoadRecipes()
     }
-    
+
     private fun loadCollections() {
         lifecycleScope.launch {
-            val result = recipeRepository.getCollections()
-            result.onSuccess { loadedCollections ->
-                collections = loadedCollections
-                updateFilterButtonLabels()
+            recipeRepository.getCollections().onSuccess { loaded ->
+                collections = loaded
+                buildFilterChips()
             }
         }
     }
-    
+
     private fun loadCategories() {
         lifecycleScope.launch {
-            val result = recipeRepository.getCategories()
-            result.onSuccess { loadedCategories ->
-                categories = loadedCategories
-                updateFilterButtonLabels()
+            recipeRepository.getCategories().onSuccess { loaded ->
+                categories = loaded
+                buildFilterChips()
             }
         }
     }
-    
-    private fun setupFilterButtons() {
-        // Category filter button
-        binding.btnFilterCategory.setOnClickListener {
-            showCategoryFilterDialog()
+
+    /**
+     * Rezept der Woche. Fehlt der Endpunkt oder die Historie, tritt das zuletzt
+     * angelegte Rezept an seine Stelle — ohne Häufigkeitssatz.
+     */
+    private fun loadFeatured() {
+        lifecycleScope.launch {
+            recipeRepository.getFeaturedRecipe()
+                .onSuccess { recipe ->
+                    featured = recipe
+                    headerAdapter.setFeatured(recipe)
+                }
+                .onFailure { error ->
+                    Log.d(TAG, "Kein Rezept der Woche vom Server: ${error.message}")
+                    fallbackFeatured()
+                }
         }
-        
-        // Collections filter button
-        binding.btnFilterCollections.setOnClickListener {
-            showCollectionsFilterDialog()
-        }
-        
-        // Clear filters button
-        binding.btnClearFilters.setOnClickListener {
-            clearAllFilters()
-        }
-        
-        updateFilterButtonLabels()
     }
-    
-    private fun showCategoryFilterDialog() {
-        // Create items for single-select category filter
-        val items = categories.map { category ->
-            FilterSelectionBottomSheet.FilterItem(
-                id = category,
-                name = category
+
+    private fun fallbackFeatured() {
+        if (featured != null) return
+        val newest = allRecipes.firstOrNull() ?: return
+        val fallback = FeaturedRecipe(
+            id = newest.id,
+            title = newest.title,
+            thumbnail = newest.thumbnail,
+            totalTime = newest.totalTime,
+            servings = newest.servings,
+            categories = newest.categories,
+            collections = newest.collections,
+            reason = "newest"
+        )
+        featured = fallback
+        headerAdapter.setFeatured(fallback)
+    }
+
+    // ==================== Filter ====================
+
+    /**
+     * Erster Chip "Alle" leert die Auswahl. Sammlungen lassen sich mehrfach
+     * wählen (das Backend nimmt eine Liste entgegen); bei Kategorien ersetzt
+     * eine neue Wahl die alte, weil die Liste nur einen Kategoriefilter kennt.
+     */
+    private fun buildFilterChips() {
+        val group = binding.chipGroupFilters
+        group.removeAllViews()
+
+        addFilterChip(FilterChip.All, getString(R.string.filter_all), isActive = !hasActiveFilters())
+        collections.forEach { collection ->
+            addFilterChip(
+                FilterChip.Collection(collection.id, collection.name),
+                collection.name,
+                isActive = selectedCollections.contains(collection.id)
             )
         }
-        
-        val selectedIds = if (selectedCategory != null) setOf(selectedCategory!!) else emptySet()
-        
-        val bottomSheet = FilterSelectionBottomSheet.newInstance(
-            title = getString(R.string.select_categories),
-            items = items,
-            selectedIds = selectedIds,
-            emptyIcon = "🏷️",
-            emptyMessage = getString(R.string.no_categories),
-            showCounts = false
-        )
-        
-        bottomSheet.onSelectionApplied = { newSelection ->
-            // Single selection for category - take first or null
-            selectedCategory = newSelection.firstOrNull()
-            updateFilterButtonLabels()
-            updateToolbarSubtitle()
-            resetAndLoadRecipes()
-        }
-        
-        bottomSheet.show(supportFragmentManager, "categoryFilter")
-    }
-    
-    private fun showCollectionsFilterDialog() {
-        // Create items for multi-select collections filter
-        val items = collections.map { collection ->
-            FilterSelectionBottomSheet.FilterItem(
-                id = collection.id,
-                name = collection.name,
-                count = collection.recipeCount
+        categories.forEach { category ->
+            addFilterChip(
+                FilterChip.Category(category),
+                category,
+                isActive = selectedCategory == category
             )
         }
-        
-        val bottomSheet = FilterSelectionBottomSheet.newInstance(
-            title = getString(R.string.select_collections),
-            items = items,
-            selectedIds = selectedCollections,
-            emptyIcon = "📚",
-            emptyMessage = getString(R.string.no_collections),
-            showCounts = true
-        )
-        
-        bottomSheet.onSelectionApplied = { newSelection ->
-            selectedCollections.clear()
-            selectedCollections.addAll(newSelection)
-            updateFilterButtonLabels()
-            updateToolbarSubtitle()
-            resetAndLoadRecipes()
-        }
-        
-        bottomSheet.show(supportFragmentManager, "collectionsFilter")
     }
-    
-    private fun clearAllFilters() {
-        selectedCategory = null
-        selectedCollections.clear()
-        updateFilterButtonLabels()
-        updateToolbarSubtitle()
+
+    private fun addFilterChip(filter: FilterChip, label: String, isActive: Boolean) {
+        val chip = Chip(this, null, com.google.android.material.R.attr.chipStyle).apply {
+            setChipDrawable(
+                com.google.android.material.chip.ChipDrawable.createFromAttributes(
+                    this@MainActivity, null, 0, R.style.Theme_Cookbook_Chip
+                )
+            )
+            text = label
+            isCheckable = true
+            isChecked = isActive
+            setOnClickListener { onFilterChipClicked(filter) }
+        }
+        binding.chipGroupFilters.addView(chip)
+    }
+
+    private fun onFilterChipClicked(filter: FilterChip) {
+        when (filter) {
+            FilterChip.All -> {
+                selectedCategory = null
+                selectedCollections.clear()
+            }
+            is FilterChip.Collection -> {
+                if (!selectedCollections.remove(filter.id)) selectedCollections.add(filter.id)
+            }
+            is FilterChip.Category -> {
+                selectedCategory = if (selectedCategory == filter.name) null else filter.name
+            }
+        }
+        buildFilterChips()
         resetAndLoadRecipes()
     }
-    
-    private fun updateFilterButtonLabels() {
-        // Update category button
-        binding.btnFilterCategory.text = selectedCategory ?: getString(R.string.all_categories)
-        
-        // Update collections button
-        val collectionsText = when {
-            selectedCollections.isEmpty() -> getString(R.string.collections)
-            selectedCollections.size == 1 -> {
-                collections.find { it.id == selectedCollections.first() }?.name ?: getString(R.string.collections)
-            }
-            else -> getString(R.string.selected_count, selectedCollections.size)
-        }
-        binding.btnFilterCollections.text = collectionsText
-        
-        // Show/hide clear button based on active filters
-        val hasActiveFilters = selectedCategory != null || selectedCollections.isNotEmpty()
-        binding.btnClearFilters.visibility = if (hasActiveFilters) View.VISIBLE else View.GONE
-        
-        // Highlight active filter buttons
-        val activeColor = getColor(R.color.primary)
-        val inactiveColor = getColor(R.color.text_secondary)
-        
-        binding.btnFilterCategory.setTextColor(if (selectedCategory != null) activeColor else inactiveColor)
-        binding.btnFilterCollections.setTextColor(if (selectedCollections.isNotEmpty()) activeColor else inactiveColor)
-    }
-    
-    /**
-     * Reset pagination and load first page
-     */
+
+    private fun hasActiveFilters(): Boolean =
+        selectedCategory != null || selectedCollections.isNotEmpty()
+
+    // ==================== Laden ====================
+
     private fun resetAndLoadRecipes() {
         currentOffset = 0
         hasMore = true
@@ -344,29 +343,17 @@ class MainActivity : AppCompatActivity() {
         recipeAdapter.submitList(emptyList())
         loadRecipes(isInitialLoad = true)
     }
-    
-    /**
-     * Load more recipes (next page)
-     */
+
     private fun loadMoreRecipes() {
         if (isLoadingMore || !hasMore) return
         loadRecipes(isInitialLoad = false)
     }
-    
-    /**
-     * Load recipes with pagination
-     */
+
     private fun loadRecipes(isInitialLoad: Boolean) {
         val generation = loadGeneration
 
         lifecycleScope.launch {
-            Log.d(TAG, "loadRecipes: isInitialLoad=$isInitialLoad, offset=$currentOffset, search=$searchQuery")
-
-            if (isInitialLoad) {
-                setLoading(true)
-            } else {
-                isLoadingMore = true
-            }
+            if (isInitialLoad) setLoading(true) else isLoadingMore = true
 
             val result = recipeRepository.getRecipes(
                 category = selectedCategory,
@@ -389,22 +376,25 @@ class MainActivity : AppCompatActivity() {
             } else {
                 isLoadingMore = false
             }
-            
-            result.onSuccess { paginatedResult ->
-                Log.d(TAG, "loadRecipes success: ${paginatedResult.items.size} items, total=${paginatedResult.total}, hasMore=${paginatedResult.hasMore}")
-                
-                totalRecipes = paginatedResult.total
-                hasMore = paginatedResult.hasMore
-                currentOffset += paginatedResult.items.size
-                
+
+            result.onSuccess { page ->
+                totalRecipes = page.total
+                hasMore = page.hasMore
+                currentOffset += page.items.size
+
                 if (isInitialLoad) {
-                    allRecipes = paginatedResult.items.toMutableList()
-                    recipeAdapter.submitList(allRecipes.toList())
+                    allRecipes = page.items.toMutableList()
+                    if (!hasAnimatedInitialLoad) {
+                        hasAnimatedInitialLoad = true
+                        recipeAdapter.playEnterAnimation(page.items.size)
+                    }
                 } else {
-                    allRecipes.addAll(paginatedResult.items)
-                    recipeAdapter.submitList(allRecipes.toList())
+                    allRecipes.addAll(page.items)
                 }
-                
+                recipeAdapter.submitList(allRecipes.toList())
+                headerAdapter.setRecipeCount(totalRecipes)
+
+                if (featured == null) fallbackFeatured()
                 updateRecipeList()
             }.onFailure { error ->
                 Log.e(TAG, "loadRecipes onFailure", error)
@@ -412,73 +402,115 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     private fun updateRecipeList() {
-        Log.d(TAG, "updateRecipeList: ${allRecipes.size} recipes, total=$totalRecipes")
-        if (allRecipes.isEmpty()) {
-            updateEmptyStateText()
-            binding.emptyStateContainer.visibility = View.VISIBLE
-            binding.recyclerViewRecipes.visibility = View.GONE
-        } else {
-            binding.emptyStateContainer.visibility = View.GONE
-            binding.recyclerViewRecipes.visibility = View.VISIBLE
-        }
+        val isEmpty = allRecipes.isEmpty()
+        if (isEmpty) updateEmptyStateText()
+        binding.emptyStateContainer.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.recyclerViewRecipes.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
 
     /**
-     * "Noch keine Rezepte vorhanden" stimmt nur ohne Suche und Filter. Sucht der
+     * "Bereit für das erste Rezept" stimmt nur ohne Suche und Filter. Sucht der
      * Nutzer, liegt es am Suchbegriff — dann muss der leere Zustand das sagen.
      */
     private fun updateEmptyStateText() {
-        val isFiltered = searchQuery.isNotEmpty() ||
-                selectedCategory != null ||
-                selectedCollections.isNotEmpty()
+        val isFiltered = searchQuery.isNotEmpty() || hasActiveFilters()
 
         if (isFiltered) {
-            binding.textEmptyStateIcon.text = getString(R.string.empty_state_icon_search)
             binding.textEmptyStateTitle.setText(R.string.no_recipes_found)
             binding.textEmptyStateHint.setText(R.string.adjust_search_or_filters)
+            binding.btnEmptyImport.visibility = View.GONE
         } else {
-            binding.textEmptyStateIcon.text = getString(R.string.empty_state_icon_cooking)
-            binding.textEmptyStateTitle.setText(R.string.no_recipes)
-            binding.textEmptyStateHint.setText(R.string.add_first_recipe)
+            binding.textEmptyStateTitle.setText(R.string.empty_first_recipe_title)
+            binding.textEmptyStateHint.setText(R.string.empty_first_recipe_hint)
+            binding.btnEmptyImport.visibility = View.VISIBLE
         }
     }
-    
-    private fun openRecipeDetail(recipe: RecipeListItem) {
+
+    // ==================== Favoriten ====================
+
+    /**
+     * Das Herz schaltet optimistisch — der Adapter hat die Anzeige schon
+     * umgestellt. Schlägt der Aufruf fehl, wird der alte Stand wiederhergestellt.
+     */
+    private fun toggleFavorite(recipe: RecipeListItem) {
+        val target = !recipe.isFavorite
+        applyFavoriteLocally(recipe.id, target)
+
+        lifecycleScope.launch {
+            recipeRepository.setFavorite(recipe.id, target)
+                .onSuccess { response -> applyFavoriteLocally(recipe.id, response.isFavorite) }
+                .onFailure {
+                    applyFavoriteLocally(recipe.id, recipe.isFavorite)
+                    showError(getString(R.string.favorite_failed))
+                }
+        }
+    }
+
+    private fun applyFavoriteLocally(recipeId: String, isFavorite: Boolean) {
+        val index = allRecipes.indexOfFirst { it.id == recipeId }
+        if (index < 0) return
+        allRecipes[index] = allRecipes[index].copy(isFavorite = isFavorite)
+        recipeAdapter.submitList(allRecipes.toList())
+    }
+
+    // ==================== Navigation ====================
+
+    private fun openRecipeDetail(recipeId: String) {
         val intent = Intent(this, RecipeDetailActivity::class.java)
-        intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_ID, recipe.id)
+        intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_ID, recipeId)
         startActivity(intent)
     }
-    
-    private fun openImportActivity() {
-        val intent = Intent(this, RecipeImportActivity::class.java)
+
+    private fun openCookMode(recipeId: String) {
+        val intent = Intent(this, CookModeActivity::class.java)
+        intent.putExtra(CookModeActivity.EXTRA_RECIPE_ID, recipeId)
         startActivity(intent)
     }
-    
-    private fun openCreateRecipe() {
-        val intent = Intent(this, RecipeEditActivity::class.java)
-        startActivity(intent)
+
+    private fun scheduleFeatured(recipe: FeaturedRecipe) {
+        lifecycleScope.launch {
+            recipeRepository.getRecipe(recipe.id)
+                .onSuccess { full ->
+                    AddToWeekPlannerBottomSheet.newInstance(full)
+                        .show(supportFragmentManager, "AddToWeekPlanner")
+                }
+                .onFailure { showError(getString(R.string.error_adding_to_planner)) }
+        }
     }
-    
+
+    /** Sammlungen verwalten und direkt als Filter übernehmen. */
+    private fun showCollectionsSheet() {
+        CollectionsBottomSheet.newInstance(selectedCollections.firstOrNull()) { collection ->
+            selectedCollections.clear()
+            collection?.id?.let { selectedCollections.add(it) }
+            buildFilterChips()
+            resetAndLoadRecipes()
+        }.show(supportFragmentManager, "collections")
+    }
+
+    private fun openWeeklyPlanner() {
+        startActivity(Intent(this, WeeklyPlannerActivity::class.java))
+    }
+
     private fun setLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
-    
+
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
-    
-    // ==================== Menu ====================
-    
+
+    // ==================== Menü ====================
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
-        
-        // Setup search
+
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
-        
-        searchView.queryHint = getString(R.string.search_recipes)
+
+        searchView.queryHint = getString(R.string.what_today)
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 searchJob?.cancel()
@@ -525,48 +557,41 @@ class MainActivity : AppCompatActivity() {
         searchQuery = trimmed
         resetAndLoadRecipes()
     }
-    
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_logout -> {
-                performLogout()
-                true
+                performLogout(); true
             }
             R.id.action_refresh -> {
-                loadData()
-                true
+                loadData(); true
+            }
+            R.id.action_collections -> {
+                showCollectionsSheet(); true
             }
             R.id.action_weekly_planner -> {
-                openWeeklyPlanner()
-                true
+                openWeeklyPlanner(); true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
-    
-    private fun openWeeklyPlanner() {
-        val intent = Intent(this, WeeklyPlannerActivity::class.java)
-        startActivity(intent)
-    }
-    
+
     private fun performLogout() {
         AlertDialog.Builder(this)
             .setTitle(R.string.logout)
             .setMessage(R.string.logout_confirmation)
             .setPositiveButton(R.string.yes) { _, _ ->
                 lifecycleScope.launch {
-                    // Clear app authentication state
                     authRepository.logout()
-                    
-                    // Clear Google Sign-In credential state to allow fresh sign-in
+
+                    // Google-Anmeldestatus löschen, damit eine neue Anmeldung möglich ist
                     try {
                         credentialManager.clearCredentialState(ClearCredentialStateRequest())
                         Log.d(TAG, "Google credential state cleared on logout")
                     } catch (e: Exception) {
                         Log.w(TAG, "Could not clear credential state: ${e.message}")
-                        // Continue anyway, not critical for logout
                     }
-                    
+
                     navigateToLogin()
                 }
             }

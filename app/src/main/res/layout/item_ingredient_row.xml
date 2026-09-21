@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Zutatenzeile: die ganze Zeile ist das Touch-Target. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ingredientRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/ingredient_row_height"
+    android:orientation="horizontal">
+
+    <View
+        android:id="@+id/checkbox"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:background="@drawable/bg_checkbox_unchecked"
+        android:duplicateParentState="true" />
+
+    <TextView
+        android:id="@+id/tvIngredientName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:fontFamily="@font/figtree_regular"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
+        tools:text="Hokkaido-Kürbis" />
+
+    <TextView
+        android:id="@+id/tvIngredientAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:textAppearance="@style/TextAppearance.Cookbook.Number"
+        android:textSize="13.5sp"
+        tools:text="750 g" />
+
+</LinearLayout>

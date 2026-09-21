@@ -8,11 +8,14 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.content.res.ColorStateList
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.cookbook.app.R
+import com.cookbook.app.util.CollectionColors
 import com.cookbook.app.util.ImageUtils
 import com.cookbook.app.data.models.*
 import com.cookbook.app.data.repository.MealPlanRepository
@@ -40,6 +43,9 @@ class WeeklyPlannerActivity : AppCompatActivity() {
     private var weekPlan: WeekPlan = WeekPlan.createEmpty(currentWeekStart)
     private var isLoading: Boolean = false
 
+    /** Der Einkaufszettel liegt zusammengeklappt unter der Leiste am unteren Rand. */
+    private var isShoppingListExpanded: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityWeeklyPlannerBinding.inflate(layoutInflater)
@@ -61,34 +67,29 @@ class WeeklyPlannerActivity : AppCompatActivity() {
 
     private fun setupNavigation() {
         binding.btnPreviousWeek.setOnClickListener {
-            if (!isLoading) {
-                navigateToWeek(-7)
-            }
+            if (!isLoading) navigateToWeek(-7)
         }
 
         binding.btnNextWeek.setOnClickListener {
-            if (!isLoading) {
-                navigateToWeek(7)
-            }
-        }
-
-        binding.btnCurrentWeek.setOnClickListener {
-            if (!isLoading) {
-                currentWeekStart = WeekPlan.getCurrentWeekStart()
-                loadMealPlan()
-            }
-        }
-
-        binding.btnNextUpcomingWeek.setOnClickListener {
-            if (!isLoading) {
-                currentWeekStart = WeekPlan.getNextWeekStart()
-                loadMealPlan()
-            }
+            if (!isLoading) navigateToWeek(7)
         }
     }
 
     private fun setupGeminiButton() {
-        // Buttons are now set up in updateIngredientsCard()
+        // Die Sendeknöpfe hängen an updateIngredientsCard(); hier nur die Leiste.
+        binding.btnOpenShoppingList.setOnClickListener { toggleShoppingList() }
+    }
+
+    private fun toggleShoppingList() {
+        isShoppingListExpanded = !isShoppingListExpanded
+        binding.cardIngredients.visibility =
+            if (isShoppingListExpanded) View.VISIBLE else View.GONE
+
+        if (isShoppingListExpanded) {
+            binding.cardIngredients.post {
+                binding.scrollContent.smoothScrollTo(0, binding.cardIngredients.top)
+            }
+        }
     }
 
     private fun navigateToWeek(days: Int) {
@@ -125,15 +126,12 @@ class WeeklyPlannerActivity : AppCompatActivity() {
     }
 
     private fun updateWeekHeader() {
-        binding.textWeekRange.text = weekPlan.getFormattedRange()
         binding.textCalendarWeek.text = getString(R.string.calendar_week, weekPlan.getWeekNumber())
-
-        // Update button states
-        val isCurrentWeek = isSameWeek(currentWeekStart, WeekPlan.getCurrentWeekStart())
-        val isNextWeek = isSameWeek(currentWeekStart, WeekPlan.getNextWeekStart())
-
-        binding.btnCurrentWeek.isEnabled = !isCurrentWeek
-        binding.btnNextUpcomingWeek.isEnabled = !isNextWeek
+        binding.textWeekRange.text = getString(
+            R.string.week_meals_summary,
+            weekPlan.getFormattedRange(),
+            weekPlan.getTotalMealsPlanned()
+        )
     }
 
     private fun isSameWeek(date1: Date, date2: Date): Boolean {
@@ -162,8 +160,8 @@ class WeeklyPlannerActivity : AppCompatActivity() {
 
             dayBinding.textDayName.text = day.getDayName(this)
             dayBinding.textDate.text = day.getFormattedDate()
+            bindDayStatus(dayBinding, day)
 
-            // Add meal slots
             dayBinding.mealSlotsContainer.removeAllViews()
 
             for (mealType in listOf(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER)) {
@@ -182,6 +180,25 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         }
     }
 
+    /** "geplant", "{n} offen" oder "ganz offen" — je nachdem, wie voll der Tag ist. */
+    private fun bindDayStatus(dayBinding: ItemDayPlanBinding, day: DayPlan) {
+        val planned = day.meals.values.count { it.recipe != null }
+        val open = day.meals.size - planned
+
+        val (text, colorRes) = when {
+            open == 0 -> getString(R.string.status_planned) to R.color.secondary
+            planned == 0 -> getString(R.string.status_fully_open) to R.color.status_open
+            else -> getString(R.string.status_open_count, open) to R.color.text_hint
+        }
+        dayBinding.textDayStatus.text = text
+        dayBinding.textDayStatus.setTextColor(ContextCompat.getColor(this, colorRes))
+    }
+
+    /**
+     * Belegt: weiße Zeile mit Sammlungs-Tile oder Rezeptfoto.
+     * Leer: gestrichelter Rahmen mit Plus. Ein Tipp öffnet das Slot-Detail
+     * beziehungsweise direkt die Rezeptauswahl.
+     */
     private fun setupMealSlotView(
         slotBinding: ItemMealSlotBinding,
         mealSlot: MealSlot,
@@ -189,52 +206,82 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         dayName: String
     ) {
         val mealType = mealSlot.mealType
-
-        // Set meal type icon and label
-        slotBinding.iconMealType.setImageResource(getMealTypeIcon(mealType))
         slotBinding.textMealType.text = mealType.getLabel(this)
 
         val recipe = mealSlot.recipe
-        if (recipe != null) {
-            // Show recipe content
-            slotBinding.recipeContentContainer.visibility = View.VISIBLE
-            slotBinding.emptySlotContainer.visibility = View.GONE
-            slotBinding.textRecipeTitle.text = recipe.title
-            slotBinding.textServings.text = mealSlot.servings.toString()
+        if (recipe == null) {
+            slotBinding.slotRoot.setBackgroundResource(R.drawable.bg_slot_empty)
+            slotBinding.slotTile.backgroundTintList =
+                ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+            slotBinding.iconMealType.visibility = View.VISIBLE
+            slotBinding.iconMealType.setImageResource(R.drawable.ic_add)
+            slotBinding.iconMealType.imageTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(this, R.color.text_hint))
+            slotBinding.imageRecipe.visibility = View.GONE
+            slotBinding.textRecipeTitle.setText(R.string.choose_recipe)
+            slotBinding.textRecipeTitle.setTextAppearance(R.style.TextAppearance_Cookbook_Body)
+            slotBinding.textRecipeTitle.setTextColor(ContextCompat.getColor(this, R.color.text_hint))
+            slotBinding.textTime.visibility = View.GONE
+            slotBinding.iconTrailing.setImageResource(R.drawable.ic_add)
 
-            // Load recipe image (handles both Base64 and URLs)
-            ImageUtils.loadImage(
-                slotBinding.imageRecipe,
-                recipe.firstImage,
-                R.drawable.placeholder_recipe
-            )
-
-            // Servings controls
-            slotBinding.btnDecreaseServings.setOnClickListener {
-                updateServings(dayIndex, mealType, mealSlot.servings - 1, recipe.id)
-            }
-            slotBinding.btnIncreaseServings.setOnClickListener {
-                updateServings(dayIndex, mealType, mealSlot.servings + 1, recipe.id)
-            }
-
-            // Remove recipe
-            slotBinding.btnRemoveRecipe.setOnClickListener {
-                removeRecipeFromSlot(dayIndex, mealType)
-            }
-
-            // Click on recipe content to view details
-            slotBinding.recipeContentContainer.setOnClickListener {
-                openRecipeDetail(recipe.id)
-            }
-        } else {
-            // Show empty slot
-            slotBinding.recipeContentContainer.visibility = View.GONE
-            slotBinding.emptySlotContainer.visibility = View.VISIBLE
-
-            slotBinding.emptySlotContainer.setOnClickListener {
+            slotBinding.slotRoot.setOnClickListener {
+                // Angetippt: kurz hervorheben, dann die Auswahl öffnen.
+                slotBinding.slotRoot.setBackgroundResource(R.drawable.bg_slot_selected)
                 openRecipeSearch(dayIndex, mealType, dayName)
             }
+            return
         }
+
+        val collectionColor = CollectionColors.forName(recipe.categories.firstOrNull())
+        slotBinding.slotRoot.setBackgroundResource(R.drawable.bg_slot_filled)
+        slotBinding.slotTile.backgroundTintList = ColorStateList.valueOf(CollectionColors.tint(collectionColor))
+        slotBinding.textRecipeTitle.setTextAppearance(R.style.TextAppearance_Cookbook_SlotTitle)
+        slotBinding.textRecipeTitle.text = recipe.title
+
+        val thumbnail = recipe.firstImage
+        if (thumbnail.isNullOrBlank()) {
+            slotBinding.imageRecipe.visibility = View.GONE
+            slotBinding.iconMealType.visibility = View.VISIBLE
+            slotBinding.iconMealType.setImageResource(getMealTypeIcon(mealType))
+            slotBinding.iconMealType.imageTintList = ColorStateList.valueOf(collectionColor)
+        } else {
+            slotBinding.iconMealType.visibility = View.GONE
+            slotBinding.imageRecipe.visibility = View.VISIBLE
+            ImageUtils.loadImage(slotBinding.imageRecipe, thumbnail, R.drawable.placeholder_recipe)
+        }
+
+        if (recipe.totalTime > 0) {
+            slotBinding.textTime.visibility = View.VISIBLE
+            slotBinding.textTime.text = getString(R.string.minutes_with_unit, recipe.totalTime)
+        } else {
+            slotBinding.textTime.visibility = View.GONE
+        }
+        slotBinding.iconTrailing.setImageResource(R.drawable.ic_chevron_right)
+
+        slotBinding.slotRoot.setOnClickListener {
+            openSlotDetail(dayIndex, mealType, dayName, mealSlot)
+        }
+    }
+
+    /** Portionen, Rezept öffnen, entfernen — alles im Slot-Detail. */
+    private fun openSlotDetail(
+        dayIndex: Int,
+        mealType: MealType,
+        dayName: String,
+        mealSlot: MealSlot
+    ) {
+        val recipe = mealSlot.recipe ?: return
+        MealSlotBottomSheet.newInstance(
+            dayName = dayName,
+            mealType = mealType,
+            recipeTitle = recipe.title,
+            servings = mealSlot.servings,
+            onServingsChanged = { servings ->
+                updateServings(dayIndex, mealType, servings, recipe.id)
+            },
+            onOpenRecipe = { openRecipeDetail(recipe.id) },
+            onRemove = { removeRecipeFromSlot(dayIndex, mealType) }
+        ).show(supportFragmentManager, "mealSlot")
     }
 
     private fun getMealTypeIcon(mealType: MealType): Int {
@@ -364,10 +411,19 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         
         if (visibleIngredients.isEmpty() && weekPlan.excludedIngredients.isEmpty()) {
             binding.cardIngredients.visibility = View.GONE
+            binding.shoppingBar.visibility = View.GONE
             return
         }
 
-        binding.cardIngredients.visibility = View.VISIBLE
+        // Die Leiste fasst zusammen; der Inhalt klappt auf Wunsch darüber auf.
+        binding.shoppingBar.visibility = View.VISIBLE
+        binding.textShoppingSummary.text = getString(
+            R.string.shopping_positions,
+            visibleIngredients.size,
+            weekPlan.getTotalMealsPlanned()
+        )
+        binding.cardIngredients.visibility =
+            if (isShoppingListExpanded) View.VISIBLE else View.GONE
         
         // Separate into new and already sent
         val newIngredients = visibleIngredients.filter { 

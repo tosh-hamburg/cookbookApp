@@ -4,6 +4,10 @@ import android.util.Log
 import com.cookbook.app.data.api.ApiClient
 import com.cookbook.app.data.api.ImportRequest
 import com.cookbook.app.data.models.CookbookCollection
+import com.cookbook.app.data.models.CookedRequest
+import com.cookbook.app.data.models.CookedResponse
+import com.cookbook.app.data.models.FavoriteResponse
+import com.cookbook.app.data.models.FeaturedRecipe
 import com.cookbook.app.data.models.ImportedRecipeData
 import com.cookbook.app.data.models.PaginatedRecipes
 import com.cookbook.app.data.models.Recipe
@@ -39,6 +43,8 @@ class RecipeRepository {
         category: String? = null,
         collectionIds: List<String>? = null,
         search: String? = null,
+        favoritesOnly: Boolean = false,
+        sort: String? = null,
         limit: Int = 20,
         offset: Int = 0
     ): Result<PaginatedRecipes> {
@@ -52,7 +58,15 @@ class RecipeRepository {
             // Convert list of collection IDs to comma-separated string
             val collectionsParam = collectionIds?.takeIf { it.isNotEmpty() }?.joinToString(",")
             Log.d(TAG, "getRecipes called: category=$category, collections=$collectionsParam, search=$search, limit=$limit, offset=$offset")
-            val response = api.getRecipes(category, collectionsParam, search, limit, offset)
+            val response = api.getRecipes(
+                category = category,
+                collections = collectionsParam,
+                search = search,
+                favorite = true.takeIf { favoritesOnly },
+                sort = sort,
+                limit = limit,
+                offset = offset
+            )
             Log.d(TAG, "getRecipes response: code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
                 val paginatedRecipes = response.body()!!
@@ -228,6 +242,86 @@ class RecipeRepository {
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Rezept konnte nicht aus der Sammlung entfernt werden"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ==================== Kochhistorie & Favoriten ====================
+    //
+    // Beides lebt auf dem Server. Die Aufrufe werden bewusst nicht lokal
+    // gepuffert — schlägt einer fehl, rollt der aufrufende Screen die
+    // optimistische Anzeige zurück und meldet es.
+
+    /**
+     * Zählt einen Kochvorgang. Wird vom "Fertig"-Button im Kochmodus gerufen.
+     */
+    suspend fun markCooked(recipeId: String, servings: Int? = null): Result<CookedResponse> {
+        return try {
+            val response = api.markCooked(recipeId, CookedRequest(servings))
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: CookedResponse())
+            } else {
+                Log.e(TAG, "markCooked failed: code=${response.code()}")
+                Result.failure(Exception("Kochvorgang konnte nicht gespeichert werden"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "markCooked exception", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Nimmt den letzten Kochvorgang zurück.
+     */
+    suspend fun undoLastCooked(recipeId: String): Result<CookedResponse> {
+        return try {
+            val response = api.undoLastCooked(recipeId)
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: CookedResponse())
+            } else {
+                Result.failure(Exception("Kochvorgang konnte nicht zurückgenommen werden"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Setzt oder entfernt das Herz. Idempotent auf beiden Seiten.
+     */
+    suspend fun setFavorite(recipeId: String, isFavorite: Boolean): Result<FavoriteResponse> {
+        return try {
+            val response = if (isFavorite) {
+                api.addFavorite(recipeId, emptyMap())
+            } else {
+                api.removeFavorite(recipeId)
+            }
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: FavoriteResponse(isFavorite))
+            } else {
+                Log.e(TAG, "setFavorite failed: code=${response.code()}")
+                Result.failure(Exception("Favorit konnte nicht gespeichert werden"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "setFavorite exception", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Rezept der Woche. Liefert das Backend den Endpunkt noch nicht, scheitert
+     * der Aufruf — der Aufmacher fällt dann auf das neueste Rezept zurück.
+     */
+    suspend fun getFeaturedRecipe(): Result<FeaturedRecipe> {
+        return try {
+            val response = api.getFeaturedRecipe()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                Result.success(body)
+            } else {
+                Result.failure(Exception("Rezept der Woche nicht verfügbar"))
             }
         } catch (e: Exception) {
             Result.failure(e)

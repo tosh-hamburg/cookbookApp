@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon-Tile; die Füllfarbe wird im Code getönt (Sammlungsfarbe, ~13 % Deckung). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/white" />
+    <corners android:radius="13dp" />
+</shape>
