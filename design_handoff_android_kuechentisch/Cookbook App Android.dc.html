@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  body { margin: 0; background: #E9E2D6; }
+  a { color: oklch(0.52 0.17 32); text-decoration: none; }
+  a:hover { color: oklch(0.44 0.16 32); text-decoration: underline; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</helmet>
+
+<section style="padding:56px 56px 96px; font-family:'Figtree',system-ui,sans-serif; color:oklch(0.26 0.04 45)">
+  <div style="max-width:860px">
+    <div style="font:700 12px/1 'Figtree',sans-serif; letter-spacing:.14em; text-transform:uppercase; color:oklch(0.56 0.17 32)">Vorschlag · Android-App · Küchentisch 1.0</div>
+    <h1 style="margin:12px 0 0; font:400 42px/1.06 'Instrument Serif',Georgia,serif; letter-spacing:-0.015em">Cookbook für Android, im Küchentisch-System</h1>
+    <p style="margin:14px 0 0; font:16px/1.65 'Figtree',sans-serif; color:oklch(0.42 0.03 45); text-wrap:pretty">Fünf Screens auf Grundlage des bestehenden Repos: Material-3-Muster bleiben (Toolbar, FAB, Chip-Group, Bottom Sheet), nur in Papier und Terrakotta. Die Palette ist eine Schärfung der vorhandenen — <span style="font-family:'JetBrains Mono',monospace; font-size:14px">#D4654A → #C8522F</span>, Hintergrund etwas wärmer, Titel in Serif. Tippbar: Chips filtern, Portionen rechnen, Kochmodus blättert.</p>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:44px; margin-top:38px; align-items:flex-start">
+
+    <div style="width:412px; flex:none">
+      <div style="margin-bottom:14px">
+        <div style="font:600 16px/1.2 'Figtree',sans-serif">1 · Rezepte</div>
+        <div style="margin-top:4px; font:13.5px/1.45 'Figtree',sans-serif; color:oklch(0.5 0.03 45)">Toolbar auf Papier, Chip-Group statt zweier Filter-Buttons, Wochenrezept als Aufmacher, erweiterter FAB.</div>
+      </div>
+      <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" width="{{ frameW }}" height="{{ frameH }}" hint-size="412px,892px">
+        <div style="min-height:100%; background:#F7F1E6; font-family:'Figtree',sans-serif">
+          <div style="position:sticky; top:0; z-index:5; background:#F7F1E6; border-bottom:1px solid #E2D9C8">
+            <div style="height:56px; display:flex; align-items:center; gap:14px; padding:0 8px 0 16px">
+              <div style="display:flex; align-items:baseline; gap:4px; flex:1">
+                <span style="font:400 24px/1 'Instrument Serif',serif; color:#3A2A22">Kochbuch</span>
+                <span style="width:6px; height:6px; border-radius:999px; background:#C8522F; display:inline-block"></span>
+              </div>
+              <span style="width:48px; height:48px; border-radius:999px; display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6B564C" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              </span>
+              <span style="width:48px; height:48px; display:grid; place-items:center">
+                <span style="width:34px; height:34px; border-radius:999px; background:#4E7A56; color:#fff; display:grid; place-items:center; font:600 13px/1 'Figtree',sans-serif">TD</span>
+              </span>
+            </div>
+            <div style="display:flex; gap:8px; padding:0 16px 12px; overflow:hidden">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+                <span onClick="{{ c.onPick }}" style="height:36px; flex:none; display:inline-flex; align-items:center; padding:0 15px; border-radius:999px; font:600 13.5px/1 'Figtree',sans-serif; background:{{ c.bg }}; color:{{ c.fg }}; border:1px solid {{ c.bd }}">{{ c.name }}</span>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="padding:16px 16px 96px">
+            <div style="font:700 10.5px/1 'Figtree',sans-serif; letter-spacing:.14em; text-transform:uppercase; color:#C8522F">Rezept der Woche</div>
+            <div style="margin-top:10px; border-radius:20px; overflow:hidden; background:#fff; box-shadow:0 14px 30px -22px rgba(74,50,36,.8); animation:rise .5s ease both">
+              <div style="position:relative; height:172px; background:#EDE6D9">
+                <image-slot id="and-hero" shape="rect" placeholder="Foto Süßkartoffel-Auflauf"></image-slot>
+                <div style="position:absolute; inset:auto 0 0 0; padding:14px 16px; background:linear-gradient(transparent, rgba(45,31,24,.82))">
+                  <div style="font:400 24px/1.2 'Instrument Serif',serif; color:#fff; text-wrap:pretty">Süßkartoffel-Auflauf mit Feta</div>
+                </div>
+              </div>
+              <div style="padding:14px 16px 16px">
+                <div style="font:14px/1.5 'Figtree',sans-serif; color:#6B564C">Schon <b style="font:500 14px/1 'JetBrains Mono',monospace">7×</b> gekocht — dein Familienfavorit.</div>
+                <div style="display:flex; gap:10px; margin-top:14px">
+                  <span style="flex:1; height:48px; border-radius:999px; background:#C8522F; color:#fff; display:inline-flex; align-items:center; justify-content:center; gap:8px; font:600 15px/1 'Figtree',sans-serif">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v6a4 4 0 0 0 8 0V3M12 13v8"></path></svg>
+                    Jetzt kochen
+                  </span>
+                  <span style="width:48px; height:48px; border-radius:999px; border:1.5px solid #3A2A22; display:grid; place-items:center">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#3A2A22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:baseline; gap:10px; margin:24px 0 12px">
+              <div style="font:400 24px/1 'Instrument Serif',serif">Meine Sammlung</div>
+              <div style="font:500 13px/1 'Figtree',sans-serif; color:#8E7666"><b style="font-family:'JetBrains Mono',monospace; font-weight:500">{{ count }}</b> Rezepte</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <sc-for list="{{ list }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex; gap:12px; padding:12px; background:#fff; border-radius:18px; box-shadow:0 12px 26px -24px rgba(74,50,36,.85); animation:rise .45s ease both; animation-delay:{{ r.delay }}">
+                  <div style="position:relative; width:104px; height:104px; flex:none; border-radius:14px; overflow:hidden; background:#EDE6D9">
+                    <image-slot id="{{ r.slot }}" shape="rect" placeholder="Foto"></image-slot>
+                  </div>
+                  <div style="flex:1; min-width:0; display:flex; flex-direction:column">
+                    <div style="display:flex; align-items:center; gap:6px">
+                      <span style="width:7px; height:7px; border-radius:2px; background:{{ r.hex }}"></span>
+                      <span style="font:700 10px/1 'Figtree',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:{{ r.hex }}">{{ r.collection }}</span>
+                    </div>
+                    <div style="margin-top:6px; font:400 19px/1.2 'Instrument Serif',serif; color:#3A2A22; text-wrap:pretty">{{ r.title }}</div>
+                    <div style="margin-top:4px; font:13px/1.4 'Figtree',sans-serif; color:#8E7666">{{ r.sub }}</div>
+                    <div style="margin-top:auto; padding-top:8px; display:flex; align-items:center; gap:14px; font:500 13px/1 'Figtree',sans-serif; color:#6B564C">
+                      <span style="display:inline-flex; align-items:center; gap:5px">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#C8522F" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>
+                        <b style="font:500 13px/1 'JetBrains Mono',monospace">{{ r.time }}</b> Min
+                      </span>
+                      <span style="display:inline-flex; align-items:center; gap:5px">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#4E7A56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0zM9 4c0 2 2 2 2 4"></path></svg>
+                        <b style="font:500 13px/1 'JetBrains Mono',monospace">{{ r.serv }}</b>
+                      </span>
+                      <div style="flex:1"></div>
+                      <span onClick="{{ r.onFav }}" style="width:32px; height:32px; margin:-8px -4px -8px 0; display:grid; place-items:center">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="{{ r.favFill }}" stroke="{{ r.favStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5C2 10.8 3.5 12.5 5 14l7 7Z"></path></svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="position:sticky; bottom:16px; float:right; margin:-80px 16px 0 0; height:56px; display:inline-flex; align-items:center; gap:9px; padding:0 22px; border-radius:18px; background:#C8522F; color:#fff; font:600 15px/1 'Figtree',sans-serif; box-shadow:0 12px 26px -10px rgba(168,65,35,.7)">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"></path></svg>
+            Rezept
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="width:412px; flex:none">
+      <div style="margin-bottom:14px">
+        <div style="font:600 16px/1.2 'Figtree',sans-serif">2 · Rezeptdetail</div>
+        <div style="margin-top:4px; font:13.5px/1.45 'Figtree',sans-serif; color:oklch(0.5 0.03 45)">Foto als Collapsing-Header, Portionsrechner über den Zutaten, feste Aktionsleiste unten.</div>
+      </div>
+      <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" width="{{ frameW }}" height="{{ frameH }}" hint-size="412px,892px">
+        <div style="min-height:100%; background:#F7F1E6; font-family:'Figtree',sans-serif; position:relative">
+          <div style="position:relative; height:268px; background:#EDE6D9">
+            <image-slot id="and-detail" shape="rect" placeholder="Titelfoto"></image-slot>
+            <div style="position:absolute; top:12px; left:12px; right:12px; display:flex; align-items:center; gap:10px">
+              <span style="width:44px; height:44px; border-radius:999px; background:rgba(255,255,255,.92); display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#3A2A22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+              </span>
+              <div style="flex:1"></div>
+              <span style="width:44px; height:44px; border-radius:999px; background:rgba(255,255,255,.92); display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="#C8522F" stroke="#C8522F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5C2 10.8 3.5 12.5 5 14l7 7Z"></path></svg>
+              </span>
+              <span style="width:44px; height:44px; border-radius:999px; background:rgba(255,255,255,.92); display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#3A2A22" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg>
+              </span>
+            </div>
+            <div style="position:absolute; inset:auto 0 0 0; height:108px; background:linear-gradient(transparent, rgba(45,31,24,.8))"></div>
+            <div style="position:absolute; bottom:14px; left:16px; right:16px">
+              <span style="height:26px; display:inline-flex; align-items:center; padding:0 11px; border-radius:999px; background:rgba(255,255,255,.92); font:700 10.5px/1 'Figtree',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#C2793A">Aufläufe</span>
+              <div style="margin-top:8px; font:400 28px/1.15 'Instrument Serif',serif; color:#fff; text-wrap:pretty">Süßkartoffel-Auflauf mit Feta und Kreuzkümmel</div>
+            </div>
+          </div>
+
+          <div style="padding:16px 16px 104px">
+            <div style="display:flex; gap:8px; padding:14px 4px; background:#fff; border-radius:16px; box-shadow:0 12px 26px -24px rgba(74,50,36,.85)">
+              <sc-for list="{{ meta }}" as="m" hint-placeholder-count="4">
+                <div style="flex:1; text-align:center">
+                  <div style="font:700 17px/1 'JetBrains Mono',monospace; color:#3A2A22; letter-spacing:-0.02em">{{ m.v }}</div>
+                  <div style="margin-top:5px; font:600 9.5px/1.2 'Figtree',sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#8E7666">{{ m.k }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="margin-top:16px; padding:14px 16px; border-radius:16px; background:rgba(214,220,168,.44); border:1px solid rgba(190,200,140,.6)">
+              <div style="font:700 10px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:#5C7038">Deine Notiz</div>
+              <div style="margin-top:7px; font:14.5px/1.55 'Figtree',sans-serif; color:#3E3020; text-wrap:pretty">Kreuzkümmel verdoppeln, Feta erst in den letzten 10 Minuten drauf.</div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:26px">
+              <div style="font:400 24px/1 'Instrument Serif',serif">Zutaten</div>
+              <div style="display:flex; align-items:center; gap:2px; border:1px solid #E2D9C8; border-radius:999px; padding:3px; background:#fff">
+                <span onClick="{{ onMinus }}" style="width:42px; height:42px; border-radius:999px; display:grid; place-items:center">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6B564C" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"></path></svg>
+                </span>
+                <span style="min-width:40px; text-align:center; font:700 16px/1 'JetBrains Mono',monospace">{{ serv }}</span>
+                <span onClick="{{ onPlus }}" style="width:42px; height:42px; border-radius:999px; display:grid; place-items:center">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6B564C" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"></path></svg>
+                </span>
+              </div>
+            </div>
+            <div style="margin-top:6px; font:13px/1.5 'Figtree',sans-serif; color:#8E7666">Portionen ändern rechnet die Mengen sofort um.</div>
+
+            <div style="margin-top:12px; background:#fff; border-radius:16px; padding:4px 16px">
+              <sc-for list="{{ ings }}" as="i" hint-placeholder-count="7">
+                <div onClick="{{ i.onToggle }}" style="display:grid; grid-template-columns:22px 1fr auto; gap:12px; align-items:center; min-height:48px; border-bottom:1px solid #F1EAE0">
+                  <span style="width:20px; height:20px; border-radius:6px; border:1.5px solid {{ i.boxBd }}; background:{{ i.boxBg }}; display:grid; place-items:center">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:{{ i.tick }}"><path d="M20 6 9 17l-5-5"></path></svg>
+                  </span>
+                  <span style="font:15px/1.35 'Figtree',sans-serif; color:{{ i.fg }}; text-decoration:{{ i.deco }}">{{ i.name }}</span>
+                  <span style="font:500 13.5px/1 'JetBrains Mono',monospace; color:{{ i.fg }}; text-decoration:{{ i.deco }}">{{ i.amount }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:12px; height:48px; border-radius:999px; border:1.5px solid #3A2A22; display:flex; align-items:center; justify-content:center; gap:9px; font:600 14.5px/1 'Figtree',sans-serif">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#3A2A22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6L22 8H5M9 21h.01M18 21h.01"></path></svg>
+              Auf den Einkaufszettel
+            </div>
+
+            <div style="margin-top:28px; font:400 24px/1 'Instrument Serif',serif">Zubereitung</div>
+            <div style="margin-top:14px; display:flex; flex-direction:column; gap:16px">
+              <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+                <div style="display:grid; grid-template-columns:38px 1fr; gap:12px; padding-bottom:14px; border-bottom:1px dashed #E2D9C8">
+                  <div style="font:400 30px/1 'Instrument Serif',serif; color:#D3A184">{{ s.no }}</div>
+                  <div>
+                    <div style="display:flex; align-items:baseline; gap:10px">
+                      <span style="font:600 15px/1.2 'Figtree',sans-serif">{{ s.h }}</span>
+                      <span style="font:500 12px/1 'JetBrains Mono',monospace; color:#C8522F">{{ s.min }}</span>
+                    </div>
+                    <div style="margin-top:6px; font:15px/1.6 'Figtree',sans-serif; color:#6B564C; text-wrap:pretty">{{ s.t }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="position:sticky; bottom:0; margin-top:-88px; padding:12px 16px 14px; background:rgba(247,241,230,.96); border-top:1px solid #E2D9C8; display:flex; gap:10px">
+            <span style="flex:1; height:52px; border-radius:999px; background:#C8522F; color:#fff; display:inline-flex; align-items:center; justify-content:center; gap:9px; font:600 15.5px/1 'Figtree',sans-serif; box-shadow:0 10px 22px -14px rgba(168,65,35,.9)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9z"></path></svg>
+              Kochmodus
+            </span>
+            <span style="width:52px; height:52px; border-radius:999px; border:1.5px solid #3A2A22; display:grid; place-items:center">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#3A2A22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+            </span>
+            <span style="width:52px; height:52px; border-radius:999px; border:1.5px solid #3A2A22; display:grid; place-items:center">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#3A2A22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+            </span>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="width:412px; flex:none">
+      <div style="margin-bottom:14px">
+        <div style="font:600 16px/1.2 'Figtree',sans-serif">3 · Kochmodus</div>
+        <div style="margin-top:4px; font:13.5px/1.45 'Figtree',sans-serif; color:oklch(0.5 0.03 45)">Vollbild, dunkel, ein Schritt pro Seite. Wischen blättert, Bildschirm bleibt an. Tippbar: Weiter/Zurück.</div>
+      </div>
+      <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" width="{{ frameW }}" height="{{ frameH }}" dark="{{ true }}" hint-size="412px,892px">
+        <div style="min-height:100%; background:#332419; font-family:'Figtree',sans-serif; display:flex; flex-direction:column">
+          <div style="padding:14px 16px 0; display:flex; align-items:center; gap:12px">
+            <span style="width:44px; height:44px; margin-left:-10px; display:grid; place-items:center">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#E4D6C0" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </span>
+            <div style="flex:1; min-width:0">
+              <div style="font:400 18px/1.2 'Instrument Serif',serif; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Süßkartoffel-Auflauf</div>
+              <div style="margin-top:3px; font:500 12px/1 'JetBrains Mono',monospace; color:#B9A88C">{{ serv }} Portionen</div>
+            </div>
+            <span style="display:inline-flex; align-items:center; gap:7px; height:32px; padding:0 12px; border-radius:999px; background:rgba(255,255,255,.08); font:500 11.5px/1 'Figtree',sans-serif; color:#D9C9AE">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2"></path></svg>
+              An
+            </span>
+          </div>
+
+          <div style="display:flex; gap:6px; padding:18px 16px 0">
+            <sc-for list="{{ dots }}" as="d" hint-placeholder-count="5">
+              <span onClick="{{ d.onPick }}" style="flex:1; height:4px; border-radius:999px; background:{{ d.bg }}"></span>
+            </sc-for>
+          </div>
+          <div style="padding:14px 16px 0; font:700 11px/1 'Figtree',sans-serif; letter-spacing:.16em; text-transform:uppercase; color:#D9AE55">Schritt {{ stepNo }} von {{ stepOf }}</div>
+
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:24px 20px">
+            <div style="font:400 26px/1.1 'Instrument Serif',serif; color:#D9AE55">{{ stepHead }}</div>
+            <div style="margin-top:16px; font:500 24px/1.42 'Figtree',sans-serif; color:#fff; text-wrap:pretty">{{ stepText }}</div>
+            <div style="margin-top:26px; padding:16px; border-radius:18px; background:rgba(255,255,255,.06)">
+              <div style="font:700 10px/1 'Figtree',sans-serif; letter-spacing:.14em; text-transform:uppercase; color:#B9A88C">Für diesen Schritt</div>
+              <div style="margin-top:12px; display:flex; flex-direction:column; gap:9px">
+                <sc-for list="{{ stepIngs }}" as="i" hint-placeholder-count="3">
+                  <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; font:15px/1.3 'Figtree',sans-serif; color:#EADFCD">
+                    <span>{{ i.name }}</span>
+                    <span style="font:500 13.5px/1 'JetBrains Mono',monospace; color:#D9AE55">{{ i.amount }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:0 16px 20px">
+            <div style="display:flex; align-items:center; gap:14px; padding:14px 18px; border-radius:18px; background:rgba(0,0,0,.24)">
+              <div style="font:700 34px/1 'JetBrains Mono',monospace; letter-spacing:-0.04em; color:#fff">{{ timer }}</div>
+              <div style="flex:1"></div>
+              <span style="height:44px; padding:0 18px; border-radius:999px; background:#D9AE55; color:#3A2A18; display:inline-flex; align-items:center; font:700 14px/1 'Figtree',sans-serif">Timer starten</span>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:12px">
+              <span onClick="{{ onPrev }}" style="width:96px; height:56px; border-radius:999px; border:1.5px solid rgba(255,255,255,.28); display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#EADFCD" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+              </span>
+              <span onClick="{{ onNext }}" style="flex:1; height:56px; border-radius:999px; background:#C8522F; color:#fff; display:inline-flex; align-items:center; justify-content:center; gap:10px; font:600 17px/1 'Figtree',sans-serif">
+                {{ nextLabel }}
+                <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="width:412px; flex:none">
+      <div style="margin-bottom:14px">
+        <div style="font:600 16px/1.2 'Figtree',sans-serif">4 · Wochenplaner</div>
+        <div style="margin-top:4px; font:13.5px/1.45 'Figtree',sans-serif; color:oklch(0.5 0.03 45)">Tageskarten statt Raster, drei Slots je Tag, Einkaufszettel als feste Leiste unten.</div>
+      </div>
+      <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" width="{{ frameW }}" height="{{ frameH }}" hint-size="412px,892px">
+        <div style="min-height:100%; background:#F7F1E6; font-family:'Figtree',sans-serif">
+          <div style="position:sticky; top:0; z-index:5; background:#F7F1E6; border-bottom:1px solid #E2D9C8; padding:0 8px">
+            <div style="height:56px; display:flex; align-items:center; gap:8px">
+              <span style="width:48px; height:48px; display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3A2A22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+              </span>
+              <span style="flex:1; font:400 22px/1 'Instrument Serif',serif">Wochenplan</span>
+              <span style="width:44px; height:44px; display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6B564C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+              </span>
+              <span style="font:600 14px/1 'JetBrains Mono',monospace; color:#3A2A22">KW 39</span>
+              <span style="width:44px; height:44px; display:grid; place-items:center">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6B564C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+              </span>
+            </div>
+            <div style="padding:0 8px 10px; font:500 13px/1 'Figtree',sans-serif; color:#8E7666">22.–28. September · <b style="font-family:'JetBrains Mono',monospace; font-weight:500">8</b> von 21 Mahlzeiten belegt</div>
+          </div>
+
+          <div style="padding:16px 16px 110px; display:flex; flex-direction:column; gap:14px">
+            <sc-for list="{{ days }}" as="d" hint-placeholder-count="4">
+              <div style="background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 12px 26px -24px rgba(74,50,36,.85)">
+                <div style="display:flex; align-items:baseline; gap:10px; padding:12px 16px; background:#F2EADD">
+                  <span style="font:600 15px/1 'Figtree',sans-serif; color:#3A2A22">{{ d.name }}</span>
+                  <span style="font:500 12.5px/1 'JetBrains Mono',monospace; color:#8E7666">{{ d.date }}</span>
+                  <div style="flex:1"></div>
+                  <span style="font:500 12px/1 'Figtree',sans-serif; color:{{ d.badgeFg }}">{{ d.badge }}</span>
+                </div>
+                <div style="padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px">
+                  <sc-for list="{{ d.slots }}" as="s" hint-placeholder-count="3">
+                    <div onClick="{{ s.onPick }}" style="display:flex; align-items:center; gap:11px; min-height:56px; padding:8px 10px; border-radius:14px; background:{{ s.bg }}; border:1.5px {{ s.bdStyle }} {{ s.bd }}">
+                      <div style="width:42px; height:42px; flex:none; border-radius:11px; background:{{ s.thumbBg }}; display:grid; place-items:center">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="{{ s.hue }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ s.icon }}"></path></svg>
+                      </div>
+                      <div style="flex:1; min-width:0">
+                        <div style="font:600 9.5px/1 'Figtree',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#8E7666">{{ s.meal }}</div>
+                        <div style="margin-top:5px; font:{{ s.titleFont }}; color:{{ s.fg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ s.title }}</div>
+                      </div>
+                      <div style="flex:none; display:flex; align-items:center; gap:8px">
+                        <span style="font:500 12px/1 'JetBrains Mono',monospace; color:#8E7666">{{ s.right }}</span>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#B5A492" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ s.chev }}"></path></svg>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="position:sticky; bottom:0; margin-top:-96px; padding:12px 16px 14px; background:rgba(247,241,230,.96); border-top:1px solid #E2D9C8">
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:16px; background:#3A2A22">
+              <div style="flex:1">
+                <div style="font:700 9.5px/1 'Figtree',sans-serif; letter-spacing:.14em; text-transform:uppercase; color:#D9AE55">Einkaufszettel</div>
+                <div style="margin-top:6px; font:14px/1.35 'Figtree',sans-serif; color:#EADFCD"><b style="font-family:'JetBrains Mono',monospace; font-weight:500">18</b> Positionen aus 8 Mahlzeiten</div>
+              </div>
+              <span style="height:44px; padding:0 18px; border-radius:999px; background:#D9AE55; color:#3A2A18; display:inline-flex; align-items:center; font:700 14px/1 'Figtree',sans-serif">Öffnen</span>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="width:412px; flex:none">
+      <div style="margin-bottom:14px">
+        <div style="font:600 16px/1.2 'Figtree',sans-serif">5 · Rezept hinzufügen</div>
+        <div style="margin-top:4px; font:13.5px/1.45 'Figtree',sans-serif; color:oklch(0.5 0.03 45)">Bottom Sheet nach dem FAB: Import per Link zuerst, Abtippen zuletzt — so wie es wirklich genutzt wird.</div>
+      </div>
+      <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" width="{{ frameW }}" height="{{ frameH }}" hint-size="412px,892px">
+        <div style="min-height:100%; position:relative; background:#F7F1E6; font-family:'Figtree',sans-serif">
+          <div style="filter:blur(0px); opacity:.5; padding:16px">
+            <div style="height:56px; display:flex; align-items:center; gap:10px">
+              <span style="font:400 24px/1 'Instrument Serif',serif; color:#3A2A22">Kochbuch</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:14px; margin-top:12px">
+              <sc-for list="{{ ghosts }}" as="g" hint-placeholder-count="4">
+                <div style="display:flex; gap:12px; padding:12px; background:#fff; border-radius:18px">
+                  <div style="width:104px; height:88px; border-radius:14px; background:#EDE6D9; flex:none"></div>
+                  <div style="flex:1; display:flex; flex-direction:column; gap:8px; padding-top:6px">
+                    <div style="height:14px; width:80%; border-radius:999px; background:#EDE6D9"></div>
+                    <div style="height:11px; width:55%; border-radius:999px; background:#F1EAE0"></div>
+                    <div style="height:11px; width:40%; border-radius:999px; background:#F1EAE0"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="position:absolute; inset:0; background:rgba(45,31,24,.42)"></div>
+
+          <div style="position:absolute; inset:auto 0 0 0; background:#F7F1E6; border-radius:24px 24px 0 0; padding:10px 0 18px; box-shadow:0 -20px 50px -20px rgba(45,31,24,.5); animation:sheet .25s ease both">
+            <div style="width:36px; height:4px; border-radius:999px; background:#D9CFBE; margin:0 auto 14px"></div>
+            <div style="padding:0 20px">
+              <div style="font:400 26px/1.15 'Instrument Serif',serif">Rezept hinzufügen</div>
+              <div style="margin-top:7px; font:14.5px/1.5 'Figtree',sans-serif; color:#6B564C">Am schnellsten geht es mit dem Link zur Rezeptseite.</div>
+
+              <div style="margin-top:18px; display:flex; align-items:center; gap:10px; height:56px; padding:0 8px 0 16px; border-radius:16px; background:#fff; border:1.5px solid #C8522F">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#C8522F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>
+                <span style="flex:1; font:15px/1 'JetBrains Mono',monospace; color:#3A2A22">eatthis.de/auflauf…</span>
+                <span style="width:44px; height:44px; border-radius:999px; background:#C8522F; display:grid; place-items:center">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+                </span>
+              </div>
+
+              <div style="margin-top:18px; display:flex; flex-direction:column; gap:10px">
+                <sc-for list="{{ addOptions }}" as="o" hint-placeholder-count="3">
+                  <div style="display:flex; align-items:center; gap:14px; min-height:64px; padding:12px 16px; border-radius:16px; background:#fff">
+                    <div style="width:44px; height:44px; flex:none; border-radius:13px; background:{{ o.tileBg }}; display:grid; place-items:center">
+                      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="{{ o.hue }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ o.icon }}"></path></svg>
+                    </div>
+                    <div style="flex:1; min-width:0">
+                      <div style="font:600 15.5px/1.25 'Figtree',sans-serif">{{ o.t }}</div>
+                      <div style="margin-top:3px; font:13px/1.4 'Figtree',sans-serif; color:#8E7666">{{ o.d }}</div>
+                    </div>
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#B5A492" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+  </div>
+
+  <div style="max-width:860px; margin-top:52px; padding:26px 28px; border-radius:20px; background:#fff; box-shadow:0 16px 36px -28px rgba(74,50,36,.9)">
+    <div style="font:400 28px/1 'Instrument Serif',serif">Was sich gegenüber dem heutigen Stand ändert</div>
+    <div style="margin-top:18px; display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:18px">
+      <sc-for list="{{ changes }}" as="c" hint-placeholder-count="6">
+        <div>
+          <div style="font:600 15px/1.25 'Figtree',sans-serif">{{ c.t }}</div>
+          <div style="margin-top:6px; font:14px/1.55 'Figtree',sans-serif; color:#6B564C; text-wrap:pretty">{{ c.d }}</div>
+          <div style="margin-top:7px; font:11.5px/1.4 'JetBrains Mono',monospace; color:#A08A72">{{ c.file }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:2400,&quot;height&quot;:1300}}">
+const HEX = {
+  'Aufläufe': '#C2793A', 'Fleisch': '#C55340', 'Nudeln': '#B8862F',
+  'Leicht': '#468F5E', 'Suppen': '#B96A43', 'Fisch': '#4C8DA6', 'Wok': '#9A5D9C'
+};
+
+const ICON = {
+  pot: 'M4 10h16v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM7 6l1 4M16 6l-1 4',
+  noodle: 'M4 6h16M4 11h16M6 16c4 0 6 3 12 3',
+  bowl: 'M4 11h16a8 8 0 0 1-8 8 8 8 0 0 1-8-8zM9 4c0 2 2 2 2 4',
+  leaf: 'M11 20A7 7 0 0 1 4 13c0-6 7-9 16-9 0 9-4 13-9 13z',
+  fish: 'M3 12c4-6 12-6 16 0-4 6-12 6-16 0zM19 12l2-3v6z',
+  plus: 'M5 12h14M12 5v14'
+};
+
+const RECIPES = [
+  { t: 'Spaghetti mit Safran und Calamaretti', c: 'Nudeln', time: 30, serv: 2, sub: 'Weißwein · Safranfäden', icon: ICON.noodle },
+  { t: 'Kürbissuppe mit Ingwer', c: 'Suppen', time: 40, serv: 4, sub: 'Hokkaido · Kokosmilch', icon: ICON.bowl },
+  { t: 'Wok-Gemüse mit Erdnusssauce', c: 'Wok', time: 25, serv: 3, sub: 'Feierabend-Schnellgericht', icon: ICON.bowl },
+  { t: 'Kabeljau auf Blattspinat', c: 'Fisch', time: 35, serv: 2, sub: 'Sanft gegart bei 140 °C', icon: ICON.fish },
+  { t: 'Pico de Gallo', c: 'Leicht', time: 30, serv: 6, sub: 'Roh · Limette · Koriander', icon: ICON.leaf },
+  { t: 'Linseneintopf mit Mettenden', c: 'Suppen', time: 75, serv: 6, sub: 'Friert gut ein', icon: ICON.bowl }
+];
+
+const ING = [
+  ['Süßkartoffeln', 800, 'g'],
+  ['Rinderhackfleisch', 500, 'g'],
+  ['Feta', 200, 'g'],
+  ['Zwiebel', 1, 'große'],
+  ['Passierte Tomaten', 400, 'g'],
+  ['Kreuzkümmel, gemahlen', 2, 'TL'],
+  ['Salz, Pfeffer', 0, 'nach Gefühl']
+];
+
+const STEPS = [
+  { h: 'Vorbereiten', t: 'Ofen auf 200 °C vorheizen. Süßkartoffeln schälen und in 1 cm dicke Scheiben schneiden.', min: 10, ings: [0] },
+  { h: 'Vorkochen', t: 'Die Scheiben in Salzwasser 8 Minuten vorkochen, abgießen und ausdampfen lassen.', min: 8, ings: [0] },
+  { h: 'Hackfleisch anbraten', t: 'Zwiebel und Knoblauch anschwitzen, Hackfleisch kräftig anbraten, mit Kreuzkümmel würzen und passierte Tomaten angießen.', min: 12, ings: [1, 3, 5] },
+  { h: 'Schichten', t: 'Süßkartoffeln und Sauce abwechselnd in die Form schichten, oben mit Kartoffeln abschließen.', min: 5, ings: [0, 4] },
+  { h: 'Backen', t: '25 Minuten backen, dann Feta darüber zerbröseln und 10 Minuten goldbraun überbacken.', min: 35, ings: [2] }
+];
+
+const DAYS = [
+  { name: 'Montag', date: '22.09.', meals: ['', 'Kürbissuppe mit Ingwer', 'Linseneintopf mit Mettenden'] },
+  { name: 'Dienstag', date: '23.09.', meals: ['', '', 'Wok-Gemüse mit Erdnusssauce'] },
+  { name: 'Mittwoch', date: '24.09.', meals: ['', 'Pico de Gallo', 'Süßkartoffel-Auflauf mit Feta'] },
+  { name: 'Donnerstag', date: '25.09.', meals: ['', '', ''] }
+];
+
+const MEALS = ['Frühstück', 'Mittag', 'Abend'];
+
+class Component extends DCLogic {
+  state = { chips: {}, serv: 4, checked: { 0: true }, step: 2, slot: '', favs: { 'Pico de Gallo': true } };
+
+  renderVals() {
+    const active = Object.keys(this.state.chips).filter(k => this.state.chips[k]);
+    const list = RECIPES.filter(r => !active.length || active.includes(r.c));
+    const factor = this.state.serv / 4;
+    const fmt = n => String(Math.round(n * 100) / 100).replace('.', ',');
+    const step = STEPS[this.state.step];
+    const fav = t => !!this.state.favs[t];
+
+    return {
+      chips: ['Alle', 'Nudeln', 'Suppen', 'Leicht', 'Fisch'].map(n => {
+        const on = n === 'Alle' ? !active.length : !!this.state.chips[n];
+        return {
+          name: n,
+          onPick: n === 'Alle'
+            ? () => this.setState({ chips: {} })
+            : () => this.setState(s => ({ chips: { ...s.chips, [n]: !s.chips[n] } })),
+          bg: on ? '#3A2A22' : 'transparent',
+          fg: on ? '#fff' : '#6B564C',
+          bd: on ? '#3A2A22' : '#DCD4C6'
+        };
+      }),
+      frameW: 412,
+      frameH: 892,
+      count: list.length,
+      list: list.map((r, i) => ({
+        title: r.t,
+        sub: r.sub,
+        collection: r.c,
+        hex: HEX[r.c],
+        time: r.time,
+        serv: r.serv,
+        slot: 'and-' + r.t.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 20),
+        delay: (i * 55) + 'ms',
+        favFill: fav(r.t) ? '#C8522F' : 'none',
+        favStroke: fav(r.t) ? '#C8522F' : '#B5A492',
+        onFav: () => this.setState(s => ({ favs: { ...s.favs, [r.t]: !s.favs[r.t] } }))
+      })),
+
+      serv: this.state.serv,
+      onMinus: () => this.setState(s => ({ serv: Math.max(1, s.serv - 1) })),
+      onPlus: () => this.setState(s => ({ serv: Math.min(12, s.serv + 1) })),
+      meta: [
+        { v: '55 Min', k: 'Gesamt' },
+        { v: '25 Min', k: 'Arbeit' },
+        { v: '725', k: 'kcal/Port.' },
+        { v: '7×', k: 'Gekocht' }
+      ],
+      ings: ING.map((i, idx) => {
+        const done = !!this.state.checked[idx];
+        return {
+          name: i[0],
+          amount: i[1] ? fmt(i[1] * factor) + ' ' + i[2] : i[2],
+          fg: done ? '#A8998A' : '#3A2A22',
+          deco: done ? 'line-through' : 'none',
+          boxBg: done ? '#C8522F' : 'transparent',
+          boxBd: done ? '#C8522F' : '#CFC3B2',
+          tick: done ? '1' : '0',
+          onToggle: () => this.setState(s => ({ checked: { ...s.checked, [idx]: !s.checked[idx] } }))
+        };
+      }),
+      steps: STEPS.slice(0, 3).map((s, i) => ({
+        no: String(i + 1).padStart(2, '0'),
+        h: s.h,
+        t: s.t,
+        min: s.min + ' Min'
+      })),
+
+      stepNo: String(this.state.step + 1).padStart(2, '0'),
+      stepOf: STEPS.length,
+      stepHead: step.h,
+      stepText: step.t,
+      timer: String(step.min).padStart(2, '0') + ':00',
+      nextLabel: this.state.step === STEPS.length - 1 ? 'Fertig' : 'Weiter',
+      stepIngs: step.ings.map(ix => ({
+        name: ING[ix][0],
+        amount: ING[ix][1] ? fmt(ING[ix][1] * factor) + ' ' + ING[ix][2] : ING[ix][2]
+      })),
+      dots: STEPS.map((s, i) => ({
+        bg: i <= this.state.step ? '#D9AE55' : 'rgba(255,255,255,.18)',
+        onPick: () => this.setState({ step: i })
+      })),
+      onPrev: () => this.setState(s => ({ step: Math.max(0, s.step - 1) })),
+      onNext: () => this.setState(s => ({ step: Math.min(STEPS.length - 1, s.step + 1) })),
+
+      days: DAYS.map(d => {
+        const open = d.meals.filter(m => !m).length;
+        return {
+          name: d.name,
+          date: d.date,
+          badge: open === 3 ? 'ganz offen' : open ? open + ' offen' : 'geplant',
+          badgeFg: open === 3 ? '#B96A43' : open ? '#8E7666' : '#4E7A56',
+          slots: d.meals.map((m, mi) => {
+            const rec = RECIPES.find(r => r.t === m) ||
+              (m ? { c: 'Aufläufe', time: 55, icon: ICON.pot } : null);
+            const key = d.name + mi;
+            const sel = this.state.slot === key;
+            return {
+              meal: MEALS[mi],
+              title: m || 'Rezept wählen',
+              titleFont: m ? '400 16px/1.25 \'Instrument Serif\',serif' : '500 14px/1.3 \'Figtree\',sans-serif',
+              fg: m ? '#3A2A22' : '#8E7666',
+              hue: m ? HEX[rec.c] : '#B5A492',
+              icon: m ? rec.icon : ICON.plus,
+              thumbBg: m ? HEX[rec.c] + '22' : 'transparent',
+              bg: m ? '#FFFFFF' : sel ? '#FAF0DD' : 'transparent',
+              bd: m ? '#F1EAE0' : sel ? '#C8522F' : '#DCD4C6',
+              bdStyle: m ? 'solid' : 'dashed',
+              right: m ? rec.time + ' Min' : '',
+              chev: m ? 'M9 6l6 6-6 6' : 'M5 12h14M12 5v14',
+              onPick: () => this.setState({ slot: key })
+            };
+          })
+        };
+      }),
+
+      ghosts: [1, 2, 3, 4],
+      addOptions: [
+        { t: 'Foto abfotografieren', d: 'Seite aus dem Kochbuch, Text wird erkannt', icon: 'M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', hue: '#4E7A56', tileBg: 'rgba(78,122,86,.14)' },
+        { t: 'Aus der Galerie', d: 'Screenshot oder gespeichertes Bild', icon: 'M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6', hue: '#B8862F', tileBg: 'rgba(184,134,47,.16)' },
+        { t: 'Selbst eintippen', d: 'Leeres Rezept anlegen', icon: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z', hue: '#C8522F', tileBg: 'rgba(200,82,47,.14)' }
+      ],
+
+      changes: [
+        { t: 'Toolbar auf Papier', d: 'Statt der terrakottafarbenen Leiste trägt der Kopf Papier, Titel in Serif, Icons in Tinte. Der Akzent bleibt dem FAB und der Primäraktion.', file: 'activity_main.xml · themes.xml' },
+        { t: 'Chip-Group statt Filter-Buttons', d: 'Die zwei Outlined-Buttons („Alle Kategorien", „Sammlungen") werden zu einer scrollenden Chip-Reihe mit Mehrfachauswahl.', file: 'activity_main.xml · FilterSelectionBottomSheet.kt' },
+        { t: 'Listenkarte mit Substanz', d: 'Querformat-Karte mit Foto 104 dp, Sammlungsmarker, Portionen und Herz — statt Titel, Kategorie, Zeit allein.', file: 'item_recipe.xml · RecipeAdapter.kt' },
+        { t: 'Rezept der Woche', d: 'Neuer Aufmacher über der Liste: automatisch das meistgekochte Rezept, mit „Jetzt kochen" und Einplanen.', file: 'MainActivity.kt (neu)' },
+        { t: 'Kochmodus', d: 'Neuer Vollbild-Screen: ein Schritt pro Seite, Wischen blättert, Timer je Schritt, Wake Lock hält den Bildschirm an.', file: 'CookModeActivity.kt (neu)' },
+        { t: 'Keine leeren Werte', d: 'Fehlende Nährwerte und Zeiten werden ausgeblendet statt als „0" gezeigt; Mengen rechnen mit Komma-Dezimalstelle.', file: 'RecipeDetailActivity.kt' }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>

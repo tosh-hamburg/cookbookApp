@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #E9E2D6; }
+  a { color: oklch(0.52 0.17 32); text-decoration: none; }
+  a:hover { color: oklch(0.44 0.16 32); text-decoration: underline; }
+</style>
+</helmet>
+
+<div style="max-width:1120px; margin:0 auto; padding:0 0 80px; font-family:'Figtree',system-ui,sans-serif; color:oklch(0.26 0.04 45)">
+
+  <header style="background:oklch(0.968 0.018 85); padding:56px 44px 44px; border-bottom:1px solid oklch(0.86 0.02 80); position:relative">
+    <div style="position:absolute; inset:0; background-image:radial-gradient(oklch(0.62 0.05 50 / .09) 1px, transparent 1px); background-size:22px 22px; pointer-events:none"></div>
+    <div style="position:relative; display:flex; align-items:flex-end; gap:32px; flex-wrap:wrap">
+      <div style="flex:1; min-width:320px">
+        <div style="font:700 12px/1 'Figtree',sans-serif; letter-spacing:.16em; text-transform:uppercase; color:oklch(0.56 0.17 32)">Design-Konzept · Version 1.0 · September 2026</div>
+        <h1 style="margin:14px 0 0; font:400 52px/1.03 'Instrument Serif',Georgia,serif; letter-spacing:-0.015em">Küchentisch</h1>
+        <p style="margin:14px 0 0; max-width:620px; font:17px/1.6 'Figtree',sans-serif; color:oklch(0.42 0.03 45); text-wrap:pretty">Das gemeinsame Gestaltungssystem für Cookbook — Web und Android. Warmes Papier, ein Terrakotta-Akzent, Serif für Rezepttitel, Mono für alle Zahlen. Gebaut für Privatnutzer: Appetit und Entscheidungshilfe, keine Datenverwaltung.</p>
+      </div>
+      <div style="display:flex; gap:10px">
+        <sc-for list="{{ heroSwatches }}" as="s" hint-placeholder-count="5">
+          <div style="width:76px">
+            <div style="height:76px; border-radius:16px; background:{{ s.hex }}; border:1px solid oklch(0.82 0.02 80 / .7)"></div>
+            <div style="margin-top:8px; font:600 11px/1.3 'Figtree',sans-serif">{{ s.name }}</div>
+            <div style="font:11px/1.3 'JetBrains Mono',monospace; color:oklch(0.56 0.03 50)">{{ s.hex }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </header>
+
+  <div style="background:#fff; padding:44px; display:flex; flex-direction:column; gap:56px">
+
+    <section>
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:22px">
+        <h2 style="margin:0; font:400 32px/1 'Instrument Serif',serif">Grundsätze</h2>
+        <div style="height:1px; flex:1; background:oklch(0.9 0.015 80)"></div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:20px">
+        <sc-for list="{{ principles }}" as="p" hint-placeholder-count="6">
+          <div style="padding:20px 22px; border-radius:18px; background:oklch(0.968 0.018 85); border:1px solid oklch(0.9 0.015 80)">
+            <div style="font:400 30px/1 'Instrument Serif',serif; color:oklch(0.78 0.06 45)">{{ p.no }}</div>
+            <div style="margin-top:12px; font:600 15.5px/1.3 'Figtree',sans-serif">{{ p.t }}</div>
+            <div style="margin-top:7px; font:14px/1.55 'Figtree',sans-serif; color:oklch(0.44 0.03 45); text-wrap:pretty">{{ p.d }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section>
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:6px">
+        <h2 style="margin:0; font:400 32px/1 'Instrument Serif',serif">Farbe</h2>
+        <div style="height:1px; flex:1; background:oklch(0.9 0.015 80)"></div>
+      </div>
+      <p style="margin:0 0 22px; max-width:640px; font:14.5px/1.6 'Figtree',sans-serif; color:oklch(0.44 0.03 45)">Eine warme Papierbasis, ein einziger Akzent für Aktionen, Grün und Gold nur als Beiwerk. Maßgeblich sind die oklch-Werte; die Hex-Spalte ist die Entsprechung für <span style="font-family:'JetBrains Mono',monospace; font-size:13px">res/values/colors.xml</span>.</p>
+      <div style="display:flex; flex-direction:column; gap:26px">
+        <sc-for list="{{ colorGroups }}" as="g" hint-placeholder-count="3">
+          <div>
+            <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50); margin-bottom:12px">{{ g.name }}</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:12px">
+              <sc-for list="{{ g.items }}" as="c" hint-placeholder-count="5">
+                <div style="display:flex; gap:12px; align-items:center; padding:11px 13px; border-radius:14px; border:1px solid oklch(0.91 0.015 80)">
+                  <div style="width:42px; height:42px; flex:none; border-radius:11px; background:{{ c.hex }}; border:1px solid oklch(0.85 0.02 80 / .8)"></div>
+                  <div style="min-width:0">
+                    <div style="font:600 13.5px/1.2 'Figtree',sans-serif">{{ c.name }}</div>
+                    <div style="margin-top:3px; font:11.5px/1.35 'JetBrains Mono',monospace; color:oklch(0.5 0.03 48)">{{ c.hex }}</div>
+                    <div style="margin-top:2px; font:11px/1.35 'JetBrains Mono',monospace; color:oklch(0.62 0.03 55); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ c.res }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+
+        <div>
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50); margin-bottom:12px">Sammlungsfarben</div>
+          <p style="margin:0 0 12px; max-width:640px; font:14px/1.55 'Figtree',sans-serif; color:oklch(0.44 0.03 45)">Nur als Punkt, Badge-Text oder 8-px-Marker — niemals als Fläche. Gleiche Helligkeit, nur der Farbton wechselt. Neue Sammlungen: Farbton aus dem Namen hashen, L 0.60–0.66 und C 0.10–0.17 halten.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px">
+            <sc-for list="{{ collectionColors }}" as="c" hint-placeholder-count="7">
+              <div style="display:flex; align-items:center; gap:9px; padding:9px 14px 9px 11px; border-radius:999px; border:1px solid oklch(0.91 0.015 80)">
+                <span style="width:10px; height:10px; border-radius:3px; background:{{ c.hue }}"></span>
+                <span style="font:600 13px/1 'Figtree',sans-serif">{{ c.name }}</span>
+                <span style="font:11px/1 'JetBrains Mono',monospace; color:oklch(0.6 0.03 55)">{{ c.hex }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:22px">
+        <h2 style="margin:0; font:400 32px/1 'Instrument Serif',serif">Typografie</h2>
+        <div style="height:1px; flex:1; background:oklch(0.9 0.015 80)"></div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:20px; margin-bottom:26px">
+        <div style="padding:22px; border-radius:18px; background:oklch(0.968 0.018 85)">
+          <div style="font:400 40px/1.1 'Instrument Serif',serif">Instrument Serif</div>
+          <div style="margin-top:10px; font:14px/1.55 'Figtree',sans-serif; color:oklch(0.44 0.03 45)">Rezepttitel, Sektionsüberschriften, Zahlen-Highlights in dunklen Flächen. Nur Regular, immer mit <span style="font-family:'JetBrains Mono',monospace; font-size:13px">letter-spacing:-0.015em</span>.</div>
+        </div>
+        <div style="padding:22px; border-radius:18px; background:oklch(0.968 0.018 85)">
+          <div style="font:600 34px/1.1 'Figtree',sans-serif; letter-spacing:-0.02em">Figtree</div>
+          <div style="margin-top:10px; font:14px/1.55 'Figtree',sans-serif; color:oklch(0.44 0.03 45)">Alle UI-Texte, Labels, Buttons, Fließtext. 400/500/600/700 — 600 macht die Arbeit, 800 nie.</div>
+        </div>
+        <div style="padding:22px; border-radius:18px; background:oklch(0.968 0.018 85)">
+          <div style="font:700 30px/1.1 'JetBrains Mono',monospace; letter-spacing:-0.03em">JetBrains Mono</div>
+          <div style="margin-top:10px; font:14px/1.55 'Figtree',sans-serif; color:oklch(0.44 0.03 45)">Jede Zahl: Zeiten, Portionen, Mengen, kcal, Timer, Datum. Immer <span style="font-family:'JetBrains Mono',monospace; font-size:13px">tabular-nums</span>.</div>
+        </div>
+      </div>
+      <div style="border:1px solid oklch(0.91 0.015 80); border-radius:18px; overflow:hidden">
+        <div style="display:grid; grid-template-columns:1fr 128px 108px 1fr; gap:16px; padding:12px 20px; background:oklch(0.968 0.018 85); font:700 10.5px/1 'Figtree',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.56 0.03 50)">
+          <span>Rolle</span><span>Web</span><span>Android</span><span>Schrift</span>
+        </div>
+        <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="9">
+          <div style="display:grid; grid-template-columns:1fr 128px 108px 1fr; gap:16px; padding:13px 20px; border-top:1px solid oklch(0.94 0.01 80); align-items:baseline">
+            <span style="font:600 14px/1.3 'Figtree',sans-serif">{{ t.role }}</span>
+            <span style="font:500 13px/1 'JetBrains Mono',monospace; color:oklch(0.4 0.03 45)">{{ t.web }}</span>
+            <span style="font:500 13px/1 'JetBrains Mono',monospace; color:oklch(0.4 0.03 45)">{{ t.and }}</span>
+            <span style="font:14px/1.3 'Figtree',sans-serif; color:oklch(0.48 0.03 48)">{{ t.font }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px; padding:16px 20px; border-radius:14px; background:oklch(0.86 0.09 110 / .32); font:14px/1.6 'Figtree',sans-serif; color:oklch(0.3 0.04 60)">Android: Instrument Serif und Figtree als <span style="font-family:'JetBrains Mono',monospace; font-size:13px">res/font</span> einbetten (OFL, beide zulässig). Ohne Einbettung sind Roboto Serif und Roboto Flex die Ersatzwahl — dann Titel eine Stufe kleiner setzen, damit die Zeilenhöhe stimmt.</div>
+    </section>
+
+    <section>
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:22px">
+        <h2 style="margin:0; font:400 32px/1 'Instrument Serif',serif">Maß, Radius, Schatten</h2>
+        <div style="height:1px; flex:1; background:oklch(0.9 0.015 80)"></div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:22px">
+        <div>
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50); margin-bottom:12px">Abstände · 4-px-Raster</div>
+          <div style="display:flex; flex-direction:column; gap:7px">
+            <sc-for list="{{ spacing }}" as="s" hint-placeholder-count="6">
+              <div style="display:flex; align-items:center; gap:12px">
+                <span style="width:46px; font:500 12.5px/1 'JetBrains Mono',monospace; color:oklch(0.48 0.03 48)">{{ s.v }}</span>
+                <span style="height:12px; width:{{ s.v }}; background:oklch(0.56 0.17 32 / .5); border-radius:3px"></span>
+                <span style="font:13px/1 'Figtree',sans-serif; color:oklch(0.5 0.03 50)">{{ s.use }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50); margin-bottom:12px">Radien</div>
+          <div style="display:flex; flex-wrap:wrap; gap:12px">
+            <sc-for list="{{ radii }}" as="r" hint-placeholder-count="5">
+              <div style="width:96px">
+                <div style="height:62px; border-radius:{{ r.v }}; background:oklch(0.968 0.018 85); border:1.5px solid oklch(0.78 0.06 45)"></div>
+                <div style="margin-top:7px; font:500 12px/1.3 'JetBrains Mono',monospace">{{ r.v }}</div>
+                <div style="font:12px/1.3 'Figtree',sans-serif; color:oklch(0.54 0.03 50)">{{ r.use }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50); margin-bottom:12px">Schatten</div>
+          <div style="display:flex; flex-direction:column; gap:14px">
+            <sc-for list="{{ shadows }}" as="s" hint-placeholder-count="3">
+              <div style="padding:14px 16px; border-radius:16px; background:#fff; box-shadow:{{ s.css }}">
+                <div style="font:600 13.5px/1.2 'Figtree',sans-serif">{{ s.name }}</div>
+                <div style="margin-top:4px; font:11.5px/1.4 'JetBrains Mono',monospace; color:oklch(0.56 0.03 52)">{{ s.and }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:22px">
+        <h2 style="margin:0; font:400 32px/1 'Instrument Serif',serif">Bausteine</h2>
+        <div style="height:1px; flex:1; background:oklch(0.9 0.015 80)"></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:22px">
+
+        <div style="padding:24px; border-radius:20px; background:oklch(0.968 0.018 85); border:1px solid oklch(0.91 0.015 80)">
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50)">Aktionen</div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:16px">
+            <span style="display:inline-flex; align-items:center; gap:9px; height:48px; padding:0 22px; border-radius:999px; background:oklch(0.56 0.17 32); color:#fff; font:600 15px/1 'Figtree',sans-serif; box-shadow:0 10px 24px -14px oklch(0.56 0.17 32 / .9); cursor:pointer" style-hover="background:oklch(0.48 0.17 32)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M12 5v14"></path></svg>
+              Primär
+            </span>
+            <span style="display:inline-flex; align-items:center; height:48px; padding:0 22px; border-radius:999px; border:1.5px solid oklch(0.26 0.04 45); font:600 15px/1 'Figtree',sans-serif; cursor:pointer" style-hover="background:oklch(0.26 0.04 45); color:#fff">Sekundär</span>
+            <span style="display:inline-flex; align-items:center; height:48px; padding:0 18px; border-radius:999px; font:600 15px/1 'Figtree',sans-serif; color:oklch(0.44 0.03 45); cursor:pointer" style-hover="background:oklch(0.93 0.015 80)">Tertiär</span>
+          </div>
+          <div style="margin-top:14px; font:13.5px/1.6 'Figtree',sans-serif; color:oklch(0.46 0.03 48)">Höhe 48 px (Web) / 48 dp (Android), immer Pill. Pro Ansicht genau eine Primäraktion. Labels sind Verben ohne Artikel: „Jetzt kochen", „Einplanen", „Importieren".</div>
+        </div>
+
+        <div style="padding:24px; border-radius:20px; background:oklch(0.968 0.018 85); border:1px solid oklch(0.91 0.015 80)">
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50)">Filter-Pills · Mehrfachauswahl</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px">
+            <sc-for list="{{ pills }}" as="p" hint-placeholder-count="5">
+              <span onClick="{{ p.onPick }}" style="height:38px; display:inline-flex; align-items:center; padding:0 16px; border-radius:999px; font:600 13.5px/1 'Figtree',sans-serif; cursor:pointer; background:{{ p.bg }}; color:{{ p.fg }}; border:1px solid {{ p.bd }}; transition:background .14s, border-color .14s" style-hover="border-color:oklch(0.56 0.17 32)">{{ p.name }}</span>
+            </sc-for>
+          </div>
+          <div style="margin-top:14px; font:13.5px/1.6 'Figtree',sans-serif; color:oklch(0.46 0.03 48)">Aktiv ist Tinte auf Tinte, nicht Terrakotta — der Akzent bleibt den Aktionen. „Alles" leert die Auswahl und ist aktiv, solange nichts gewählt ist. Probier es an: <b style="font-family:'JetBrains Mono',monospace; font-weight:500">{{ pillCount }}</b> aktiv.</div>
+        </div>
+
+        <div style="padding:24px; border-radius:20px; background:oklch(0.968 0.018 85); border:1px solid oklch(0.91 0.015 80)">
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50)">Rezeptkarte</div>
+          <div style="margin-top:16px; max-width:280px; background:#fff; border-radius:20px; overflow:hidden; box-shadow:0 14px 34px -24px oklch(0.4 0.05 50 / .7)">
+            <div style="position:relative; height:150px; background:oklch(0.92 0.02 80)">
+              <image-slot id="ds-card-photo" shape="rect" placeholder="Rezeptfoto"></image-slot>
+              <span style="position:absolute; top:12px; left:12px; height:28px; display:inline-flex; align-items:center; padding:0 12px; border-radius:999px; background:#fff; font:700 11.5px/1 'Figtree',sans-serif; letter-spacing:.06em; text-transform:uppercase; color:oklch(0.66 0.15 60)">Aufläufe</span>
+              <span style="position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:999px; background:#fff; display:grid; place-items:center; box-shadow:0 6px 14px -8px oklch(0.4 0.05 50 / .8)">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="oklch(0.56 0.17 32)" stroke="oklch(0.56 0.17 32)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5C2 10.8 3.5 12.5 5 14l7 7Z"></path></svg>
+              </span>
+            </div>
+            <div style="padding:16px 18px 18px">
+              <div style="font:400 23px/1.2 'Instrument Serif',serif; letter-spacing:-0.01em">Süßkartoffel-Auflauf mit Feta</div>
+              <div style="margin-top:6px; font:14px/1.5 'Figtree',sans-serif; color:oklch(0.52 0.03 48)">Ofen 200 °C · hält zwei Abende</div>
+              <div style="display:flex; align-items:center; gap:18px; margin-top:14px; padding-top:13px; border-top:1px dashed oklch(0.86 0.02 80); font:500 13.5px/1 'Figtree',sans-serif; color:oklch(0.42 0.03 45)">
+                <span style="display:inline-flex; align-items:center; gap:6px">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="oklch(0.56 0.17 32)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>
+                  <b style="font:500 13.5px/1 'JetBrains Mono',monospace">55</b> Min
+                </span>
+                <span style="display:inline-flex; align-items:center; gap:6px">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="oklch(0.52 0.09 145)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0zM9 4c0 2 2 2 2 4"></path></svg>
+                  <b style="font:500 13.5px/1 'JetBrains Mono',monospace">4</b> Port.
+                </span>
+                <div style="flex:1"></div>
+                <span style="font:600 13px/1 'Figtree',sans-serif; color:oklch(0.56 0.17 32)">725 kcal</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:14px; font:13.5px/1.6 'Figtree',sans-serif; color:oklch(0.46 0.03 48)">Titel in Serif, Sachzeile darunter, Fußzeile durch gestrichelte Linie getrennt. Fehlt ein Nährwert, entfällt die Angabe — niemals „0 kcal".</div>
+        </div>
+
+        <div style="padding:24px; border-radius:20px; background:oklch(0.968 0.018 85); border:1px solid oklch(0.91 0.015 80)">
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50)">Portionsrechner &amp; Zutatenzeile</div>
+          <div style="margin-top:16px; background:#fff; border-radius:18px; padding:18px 20px">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+              <span style="font:400 24px/1 'Instrument Serif',serif">Zutaten</span>
+              <div style="display:flex; align-items:center; gap:2px; border:1px solid oklch(0.88 0.02 80); border-radius:999px; padding:3px">
+                <span onClick="{{ onMinus }}" style="width:34px; height:34px; border-radius:999px; display:grid; place-items:center; cursor:pointer; color:oklch(0.4 0.03 45)" style-hover="background:oklch(0.94 0.02 80)">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"></path></svg>
+                </span>
+                <span style="min-width:44px; text-align:center; font:700 15px/1 'JetBrains Mono',monospace">{{ serv }}</span>
+                <span onClick="{{ onPlus }}" style="width:34px; height:34px; border-radius:999px; display:grid; place-items:center; cursor:pointer; color:oklch(0.4 0.03 45)" style-hover="background:oklch(0.94 0.02 80)">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"></path></svg>
+                </span>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <sc-for list="{{ ings }}" as="i" hint-placeholder-count="4">
+                <div onClick="{{ i.onToggle }}" style="display:grid; grid-template-columns:22px 1fr auto; gap:11px; align-items:center; padding:10px 2px; border-bottom:1px solid oklch(0.94 0.012 80); cursor:pointer">
+                  <span style="width:20px; height:20px; border-radius:6px; border:1.5px solid {{ i.boxBd }}; background:{{ i.boxBg }}; display:grid; place-items:center">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:{{ i.tick }}"><path d="M20 6 9 17l-5-5"></path></svg>
+                  </span>
+                  <span style="font:15px/1.4 'Figtree',sans-serif; color:{{ i.fg }}; text-decoration:{{ i.deco }}">{{ i.name }}</span>
+                  <span style="font:500 13.5px/1 'JetBrains Mono',monospace; color:{{ i.fg }}; text-decoration:{{ i.deco }}">{{ i.amount }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="margin-top:14px; font:13.5px/1.6 'Figtree',sans-serif; color:oklch(0.46 0.03 48)">Mengen rechnen live mit: <span style="font-family:'JetBrains Mono',monospace; font-size:13px">Menge × (Portionen / Basis)</span>, zwei Dezimalstellen, Komma als Trennzeichen. Angaben ohne Zahl bleiben stehen.</div>
+        </div>
+
+        <div style="padding:24px; border-radius:20px; background:oklch(0.968 0.018 85); border:1px solid oklch(0.91 0.015 80)">
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.56 0.03 50)">Mahlzeiten-Slot</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px">
+            <div style="min-height:112px; border-radius:16px; padding:13px 14px; background:#fff; border:1.5px solid oklch(0.92 0.015 80); box-shadow:0 12px 26px -22px oklch(0.4 0.05 50 / .8)">
+              <div style="display:flex; align-items:center; gap:7px">
+                <span style="width:8px; height:8px; border-radius:999px; background:oklch(0.66 0.14 85)"></span>
+                <span style="font:700 10px/1 'Figtree',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.66 0.14 85)">Nudeln</span>
+              </div>
+              <div style="margin-top:9px; font:400 17px/1.25 'Instrument Serif',serif">Spaghetti mit Safran</div>
+              <div style="margin-top:8px; font:500 12px/1 'JetBrains Mono',monospace; color:oklch(0.58 0.03 55)">30 Min</div>
+            </div>
+            <div style="min-height:112px; border-radius:16px; padding:13px 14px; border:1.5px dashed oklch(0.85 0.02 80)">
+              <div style="display:flex; align-items:center; gap:7px">
+                <span style="width:8px; height:8px; border-radius:999px; background:oklch(0.72 0.02 60)"></span>
+                <span style="font:700 10px/1 'Figtree',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.62 0.03 58)">Offen</span>
+              </div>
+              <div style="margin-top:9px; font:500 14px/1.3 'Figtree',sans-serif; color:oklch(0.58 0.03 55)">frei</div>
+              <div style="margin-top:8px; font:500 12px/1 'JetBrains Mono',monospace; color:oklch(0.62 0.03 58)">Rezept wählen</div>
+            </div>
+          </div>
+          <div style="margin-top:14px; font:13.5px/1.6 'Figtree',sans-serif; color:oklch(0.46 0.03 48)">Belegt ist weiß mit Schatten, leer ist gestrichelt und transparent — Leere ist sichtbar, aber nicht laut. Angetippt: Rahmen Terrakotta, Fläche <span style="font-family:'JetBrains Mono',monospace; font-size:13px">#FAF0DD</span>.</div>
+        </div>
+
+        <div style="padding:24px; border-radius:20px; background:oklch(0.22 0.035 45)">
+          <div style="font:700 11px/1 'Figtree',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:oklch(0.82 0.12 90)">Dunkle Fläche · Kochmodus</div>
+          <div style="margin-top:16px; font:400 26px/1 'Instrument Serif',serif; color:oklch(0.82 0.12 90)">Hackfleisch anbraten</div>
+          <div style="margin-top:12px; font:500 21px/1.4 'Figtree',sans-serif; color:#fff; text-wrap:pretty">Zwiebel und Knoblauch anschwitzen, Hackfleisch kräftig anbraten, mit Kreuzkümmel würzen.</div>
+          <div style="display:flex; align-items:center; gap:16px; margin-top:20px">
+            <div style="font:700 36px/1 'JetBrains Mono',monospace; letter-spacing:-0.04em; color:#fff">12:00</div>
+            <span style="display:inline-flex; align-items:center; height:36px; padding:0 16px; border-radius:999px; background:oklch(0.82 0.12 90); color:oklch(0.24 0.04 60); font:700 13px/1 'Figtree',sans-serif; cursor:pointer">Timer starten</span>
+          </div>
+          <div style="margin-top:18px; font:13.5px/1.6 'Figtree',sans-serif; color:oklch(0.8 0.03 80)">Nur der Kochmodus ist dunkel — die einzige Ausnahme im System. Schritttext ab 21 px (Web 34 px), Gold trägt die Akzente, Terrakotta bleibt der Weiter-Button.</div>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:22px">
+        <h2 style="margin:0; font:400 32px/1 'Instrument Serif',serif">Sprache, Zahlen, Bewegung</h2>
+        <div style="height:1px; flex:1; background:oklch(0.9 0.015 80)"></div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:20px">
+        <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+          <div style="padding:20px 22px; border-radius:18px; border:1px solid oklch(0.91 0.015 80)">
+            <div style="font:600 15.5px/1.25 'Figtree',sans-serif">{{ r.t }}</div>
+            <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px">
+              <sc-for list="{{ r.items }}" as="i" hint-placeholder-count="4">
+                <div style="display:grid; grid-template-columns:16px 1fr; gap:9px; align-items:start">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="oklch(0.56 0.17 32)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="margin-top:3px"><path d="M20 6 9 17l-5-5"></path></svg>
+                  <span style="font:14px/1.55 'Figtree',sans-serif; color:oklch(0.44 0.03 45); text-wrap:pretty">{{ i }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:20px; padding:20px 22px; border-radius:18px; background:oklch(0.56 0.17 32 / .08); border:1px solid oklch(0.56 0.17 32 / .25)">
+        <div style="font:600 15.5px/1.25 'Figtree',sans-serif; color:oklch(0.42 0.14 32)">Nicht im System</div>
+        <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px">
+          <sc-for list="{{ nope }}" as="n" hint-placeholder-count="6">
+            <span style="display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 14px; border-radius:999px; background:#fff; font:500 13.5px/1 'Figtree',sans-serif; color:oklch(0.4 0.06 40)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="oklch(0.56 0.17 32)" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+              {{ n }}
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:6px">
+        <h2 style="margin:0; font:400 32px/1 'Instrument Serif',serif">Übertragung auf die Plattformen</h2>
+        <div style="height:1px; flex:1; background:oklch(0.9 0.015 80)"></div>
+      </div>
+      <p style="margin:0 0 20px; max-width:660px; font:14.5px/1.6 'Figtree',sans-serif; color:oklch(0.44 0.03 45)">Web (React + Tailwind) und Android (Material 3, XML-Layouts) teilen Tokens und Bausteine. Auf Android bleiben die Material-Muster erhalten — Toolbar, FAB, Bottom Sheets —, nur in Küchentisch-Kleidung.</p>
+      <div style="border:1px solid oklch(0.91 0.015 80); border-radius:18px; overflow:hidden">
+        <div style="display:grid; grid-template-columns:1.1fr 1fr 1.1fr; gap:16px; padding:12px 20px; background:oklch(0.968 0.018 85); font:700 10.5px/1 'Figtree',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:oklch(0.56 0.03 50)">
+          <span>Baustein</span><span>Web</span><span>Android</span>
+        </div>
+        <sc-for list="{{ mapping }}" as="m" hint-placeholder-count="8">
+          <div style="display:grid; grid-template-columns:1.1fr 1fr 1.1fr; gap:16px; padding:13px 20px; border-top:1px solid oklch(0.94 0.01 80)">
+            <span style="font:600 13.5px/1.35 'Figtree',sans-serif">{{ m.part }}</span>
+            <span style="font:13px/1.45 'Figtree',sans-serif; color:oklch(0.46 0.03 48)">{{ m.web }}</span>
+            <span style="font:13px/1.45 'Figtree',sans-serif; color:oklch(0.46 0.03 48)">{{ m.and }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1120,&quot;height&quot;:1400}}">
+const COLL = [
+  ['Aufläufe', 'oklch(0.66 0.15 60)', '#C2793A'],
+  ['Fleisch', 'oklch(0.60 0.17 25)', '#C55340'],
+  ['Nudeln', 'oklch(0.66 0.14 85)', '#B8862F'],
+  ['Leicht', 'oklch(0.60 0.12 150)', '#468F5E'],
+  ['Suppen', 'oklch(0.62 0.13 40)', '#B96A43'],
+  ['Fisch', 'oklch(0.62 0.10 210)', '#4C8DA6'],
+  ['Wok', 'oklch(0.58 0.14 320)', '#9A5D9C']
+];
+
+const ING = [
+  ['Süßkartoffeln', 800, 'g'],
+  ['Rinderhackfleisch', 500, 'g'],
+  ['Feta', 200, 'g'],
+  ['Kreuzkümmel, gemahlen', 2, 'TL'],
+  ['Salz, Pfeffer', 0, 'nach Gefühl']
+];
+
+class Component extends DCLogic {
+  state = { serv: 4, checked: { 0: true }, pills: {} };
+
+  renderVals() {
+    const factor = this.state.serv / 4;
+    const fmt = n => String(Math.round(n * 100) / 100).replace('.', ',');
+    const names = ['Alles', 'Aufläufe', 'Nudeln', 'Leicht', 'Suppen'];
+    const active = Object.keys(this.state.pills).filter(k => this.state.pills[k]);
+
+    return {
+      heroSwatches: [
+        { name: 'Papier', hex: '#F7F1E6' },
+        { name: 'Tinte', hex: '#3A2A22' },
+        { name: 'Terrakotta', hex: '#C8522F' },
+        { name: 'Salbei', hex: '#D6DCA8' },
+        { name: 'Gold', hex: '#D9AE55' }
+      ],
+
+      principles: [
+        { no: '01', t: 'Appetit vor Verwaltung', d: 'Fotos groß, Titel in Serif, Zahlen ruhig. Die App ist ein Kochbuch, kein Datenbank-Frontend.' },
+        { no: '02', t: 'Ein Akzent, viel Papier', d: 'Terrakotta markiert genau die Aktion, die gerade zählt. Alles andere trägt Papier, Tinte und Hairlines.' },
+        { no: '03', t: 'Entscheidungshilfe einbauen', d: 'Rezept der Woche, Vorschläge, offene Wochentage: jede Ansicht beantwortet „was koche ich?" mit.' },
+        { no: '04', t: 'Keine leeren Zahlen', d: 'Fehlt ein Wert, entfällt das Feld. „0 kcal" oder „0 Min" erscheinen nie.' },
+        { no: '05', t: 'Zahlen sind Monospace', d: 'Zeiten, Mengen, Portionen, Timer — alle tabellarisch, damit Listen beim Scrollen ruhig bleiben.' },
+        { no: '06', t: 'Bewegung nur als Hinweis', d: 'Einblenden 500 ms, Hover 140–160 ms, kein Federn. Bei reduzierter Bewegung fällt alles weg.' }
+      ],
+
+      colorGroups: [
+        { name: 'Flächen', items: [
+          { name: 'Papier', hex: '#F7F1E6', res: 'background' },
+          { name: 'Karte', hex: '#FFFFFF', res: 'surface · card_background' },
+          { name: 'Sand', hex: '#F2EADD', res: 'surface_variant' },
+          { name: 'Linie', hex: '#DCD4C6', res: 'divider · card_stroke' }
+        ]},
+        { name: 'Schrift', items: [
+          { name: 'Tinte', hex: '#3A2A22', res: 'text_primary' },
+          { name: 'Tinte 2', hex: '#6B564C', res: 'text_secondary' },
+          { name: 'Tinte 3', hex: '#8E7666', res: 'text_hint' },
+          { name: 'Auf Terrakotta', hex: '#FFFFFF', res: 'text_on_primary' }
+        ]},
+        { name: 'Akzente', items: [
+          { name: 'Terrakotta', hex: '#C8522F', res: 'primary' },
+          { name: 'Terrakotta gedrückt', hex: '#A94123', res: 'primary_variant' },
+          { name: 'Kräutergrün', hex: '#4E7A56', res: 'secondary' },
+          { name: 'Salbei', hex: '#D6DCA8', res: 'secondary_light' },
+          { name: 'Gold', hex: '#D9AE55', res: 'accent' },
+          { name: 'Nachtküche', hex: '#332419', res: 'cook_mode_bg (neu)' }
+        ]}
+      ],
+
+      collectionColors: COLL.map(c => ({ name: c[0], hue: c[1], hex: c[2] })),
+
+      typeScale: [
+        { role: 'Screen-Titel', web: '40–52 px', and: '30–34 sp', font: 'Instrument Serif 400' },
+        { role: 'Rezepttitel (Detail)', web: '46 px', and: '28 sp', font: 'Instrument Serif 400' },
+        { role: 'Sektionstitel', web: '30 px', and: '22 sp', font: 'Instrument Serif 400' },
+        { role: 'Kartentitel', web: '23 px', and: '18 sp', font: 'Instrument Serif 400' },
+        { role: 'Schritttext Kochmodus', web: '34 px', and: '21 sp', font: 'Figtree 500' },
+        { role: 'Fließtext', web: '15.5–16.5 px', and: '15 sp', font: 'Figtree 400' },
+        { role: 'UI / Button', web: '14–15 px', and: '14–15 sp', font: 'Figtree 600' },
+        { role: 'Label (Versalien)', web: '11–12 px · +.12em', and: '11 sp · +.12em', font: 'Figtree 700' },
+        { role: 'Zahlen', web: '12–44 px', and: '12–36 sp', font: 'JetBrains Mono 500/700' }
+      ],
+
+      spacing: [
+        { v: '4px', use: 'Icon zu Label' },
+        { v: '8px', use: 'Pills, Chips' },
+        { v: '12px', use: 'in Karten' },
+        { v: '16px', use: 'Kartenpolster, Bildschirmrand mobil' },
+        { v: '24px', use: 'Blockabstand' },
+        { v: '40px', use: 'Bildschirmrand Desktop' }
+      ],
+
+      radii: [
+        { v: '999px', use: 'Buttons, Pills' },
+        { v: '12px', use: 'Slots mobil, Eingaben' },
+        { v: '16px', use: 'Slots, Tiles' },
+        { v: '20px', use: 'Karten' },
+        { v: '24px', use: 'Titelfoto' }
+      ],
+
+      shadows: [
+        { name: 'Karte', css: '0 14px 34px -24px oklch(0.4 0.05 50 / .7)', and: 'cardElevation 2dp' },
+        { name: 'Karte gehoben', css: '0 24px 44px -24px oklch(0.4 0.05 50 / .8)', and: 'cardElevation 6dp (gedrückt)' },
+        { name: 'Primärbutton', css: '0 10px 24px -14px oklch(0.56 0.17 32 / .9)', and: 'FAB elevation 6dp' }
+      ],
+
+      pills: names.map(n => {
+        const on = n === 'Alles' ? !active.length : !!this.state.pills[n];
+        return {
+          name: n,
+          onPick: n === 'Alles'
+            ? () => this.setState({ pills: {} })
+            : () => this.setState(s => ({ pills: { ...s.pills, [n]: !s.pills[n] } })),
+          bg: on ? 'oklch(0.26 0.04 45)' : 'transparent',
+          fg: on ? '#fff' : 'oklch(0.4 0.03 45)',
+          bd: on ? 'oklch(0.26 0.04 45)' : 'oklch(0.86 0.02 80)'
+        };
+      }),
+      pillCount: active.length,
+
+      serv: this.state.serv,
+      onMinus: () => this.setState(s => ({ serv: Math.max(1, s.serv - 1) })),
+      onPlus: () => this.setState(s => ({ serv: Math.min(12, s.serv + 1) })),
+      ings: ING.map((i, idx) => {
+        const done = !!this.state.checked[idx];
+        return {
+          name: i[0],
+          amount: i[1] ? fmt(i[1] * factor) + ' ' + i[2] : i[2],
+          fg: done ? 'oklch(0.66 0.02 50)' : 'oklch(0.26 0.04 45)',
+          deco: done ? 'line-through' : 'none',
+          boxBg: done ? 'oklch(0.56 0.17 32)' : 'transparent',
+          boxBd: done ? 'oklch(0.56 0.17 32)' : 'oklch(0.8 0.02 80)',
+          tick: done ? '1' : '0',
+          onToggle: () => this.setState(s => ({ checked: { ...s.checked, [idx]: !s.checked[idx] } }))
+        };
+      }),
+
+      rules: [
+        { t: 'Sprache', items: [
+          'Deutsch, „du", knapp und konkret: „Wonach ist dir heute?", „Noch 2 Abende offen".',
+          'Buttons sind Verben: „Jetzt kochen", „Einplanen", „Importieren".',
+          'Leerzustände nennen den nächsten Schritt, nicht das Problem: „Bereit für das erste Rezept".',
+          'Keine Ausrufezeichen, keine Werbesprache, keine Emoji.'
+        ]},
+        { t: 'Zahlen', items: [
+          'Datum 22.09.2026, Wochentage zweistellig abgekürzt (Mo, Di).',
+          'Dezimalkomma: 0,75 Bund · 1.234 kcal.',
+          'Zeiten immer mit Einheit: „55 Min", Timer als MM:SS.',
+          'Mengen werden gerundet auf zwei Dezimalstellen angezeigt.'
+        ]},
+        { t: 'Bewegung', items: [
+          'Einblenden von Listen: 500 ms, 60 ms Versatz pro Karte.',
+          'Hover/Press: 140–160 ms, Karten heben sich 2–3 px.',
+          'Fortschrittsbalken 200 ms, Timer sekündlich.',
+          'prefers-reduced-motion schaltet alle Schleifen ab.'
+        ]},
+        { t: 'Bilder', items: [
+          'Rezeptfotos füllen ihre Fläche (object-fit: cover, centerCrop).',
+          'Kein Foto vorhanden: ruhige Fläche #EDE6D9 mit Icon in der Sammlungsfarbe.',
+          'Niemals dasselbe Ersatzfoto für mehrere Rezepte.',
+          'Keine Illustrationen, keine Symbolbilder aus Bilddatenbanken.'
+        ]}
+      ],
+
+      nope: ['Verlaufsflächen', 'Emoji', 'Karten mit Farbbalken links', 'Schlagschatten über 40 px', 'Vollflächige Sammlungsfarben', 'Zwei Akzentfarben gleichzeitig'],
+
+      mapping: [
+        { part: 'Kopfbereich', web: 'Papiergrund, 78 px Kopfzeile mit Wortmarke in Serif', and: 'MaterialToolbar auf Papier (nicht Terrakotta), Titel in Serif, Icons in Tinte' },
+        { part: 'Primäraktion', web: 'Pill-Button rechts oben', and: 'FAB in Terrakotta, erweitert mit Label „Rezept"' },
+        { part: 'Filter', web: 'Pill-Reihe, Mehrfachauswahl', and: 'Scrollende Chip-Group (Widget.Material3.Chip.Filter) statt zweier Filter-Buttons' },
+        { part: 'Rezeptkarte', web: 'radius 20 px, Schatten -24 px', and: 'MaterialCardView, cardCornerRadius 20dp, elevation 2dp, Bild 150dp' },
+        { part: 'Detailkopf', web: 'Foto 420 px, Titel darüber links', and: 'CollapsingToolbar mit Foto, Titel in Serif, Gradient nur unten' },
+        { part: 'Zutaten', web: 'Sticky-Karte rechts', and: 'Abschnitt unter dem Foto, Stepper 48dp, Checkbox 20dp' },
+        { part: 'Auswahl / Dialog', web: 'Modal mittig', and: 'BottomSheet mit 4 px Griff, Papiergrund, radius 22dp oben' },
+        { part: 'Kochmodus', web: 'Zwei Spalten, Rail links', and: 'Vollbild, ein Schritt pro Seite, Wischen blättert, Wake Lock aktiv' },
+        { part: 'Wochenplaner', web: '7 × 3 Raster', and: 'Tageskarten untereinander, drei Slots je Karte, Pager für die Woche' }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>
