@@ -95,6 +95,15 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <!--
+        Filter-Chip: die Schriftfarbe muss dem Auswahlzustand folgen. Eine feste
+        Farbe im TextAppearance schlägt sonst den Selector des Chips und der
+        aktive Chip zeigt Tinte auf Tinte.
+    -->
+    <style name="TextAppearance.Cookbook.Ui.Small.Chip">
+        <item name="android:textColor">@color/chip_text_selector</item>
+    </style>
+
     <!-- Schritttext im Kochmodus -->
     <style name="TextAppearance.Cookbook.CookStep" parent="TextAppearance.Material3.BodyLarge">
         <item name="android:fontFamily">@font/figtree_medium</item>

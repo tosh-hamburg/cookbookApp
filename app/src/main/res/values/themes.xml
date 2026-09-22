@@ -115,7 +115,7 @@
         <item name="chipStrokeWidth">1dp</item>
         <item name="chipCornerRadius">18dp</item>
         <item name="chipMinHeight">@dimen/chip_height</item>
-        <item name="android:textAppearance">@style/TextAppearance.Cookbook.Ui.Small</item>
+        <item name="android:textAppearance">@style/TextAppearance.Cookbook.Ui.Small.Chip</item>
         <item name="chipIconVisible">false</item>
         <item name="checkedIconVisible">false</item>
         <item name="closeIconVisible">false</item>

@@ -63,6 +63,16 @@ class MainActivity : AppCompatActivity() {
 
     // Pagination state
     private var allRecipes: MutableList<RecipeListItem> = mutableListOf()
+
+    /**
+     * Ids aller bereits angezeigten Rezepte. Das Backend paginiert die
+     * Volltextsuche über `offset`; bei gleichem Relevanzrang ist die
+     * Reihenfolge zwischen zwei Abfragen nicht stabil, dadurch rutscht ein
+     * Treffer an der Seitengrenze in beide Seiten. Die Web-App merkt davon
+     * nichts, weil sie die Liste nicht seitenweise nachlädt.
+     */
+    private val shownRecipeIds: MutableSet<String> = mutableSetOf()
+
     private var currentOffset = 0
     private var hasMore = true
     private var isLoadingMore = false
@@ -297,19 +307,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Der Chip wird aus dem Layout aufgeblasen, damit der Style auf der View
+     * landet und nicht nur auf dem ChipDrawable — sonst zeichnet die View den
+     * Text in der Material-Vorgabefarbe und der aktive Chip wird unlesbar.
+     */
     private fun addFilterChip(filter: FilterChip, label: String, isActive: Boolean) {
-        val chip = Chip(this, null, com.google.android.material.R.attr.chipStyle).apply {
-            setChipDrawable(
-                com.google.android.material.chip.ChipDrawable.createFromAttributes(
-                    this@MainActivity, null, 0, R.style.Theme_Cookbook_Chip
-                )
-            )
-            text = label
-            isCheckable = true
-            isChecked = isActive
-            setOnClickListener { onFilterChipClicked(filter) }
-        }
-        binding.chipGroupFilters.addView(chip)
+        val group = binding.chipGroupFilters
+        val chip = layoutInflater.inflate(R.layout.item_filter_chip, group, false) as Chip
+        chip.text = label
+        chip.isChecked = isActive
+        chip.setOnClickListener { onFilterChipClicked(filter) }
+        group.addView(chip)
     }
 
     private fun onFilterChipClicked(filter: FilterChip) {
@@ -340,6 +349,7 @@ class MainActivity : AppCompatActivity() {
         isLoadingMore = false
         loadGeneration++
         allRecipes.clear()
+        shownRecipeIds.clear()
         recipeAdapter.submitList(emptyList())
         loadRecipes(isInitialLoad = true)
     }
@@ -380,22 +390,34 @@ class MainActivity : AppCompatActivity() {
             result.onSuccess { page ->
                 totalRecipes = page.total
                 hasMore = page.hasMore
+                // Der Offset zählt über die Antwort des Servers, nicht über die
+                // angezeigte Liste — sonst würde eine verworfene Dublette die
+                // nächste Seite verschieben.
                 currentOffset += page.items.size
 
+                val newItems = page.items.filter { shownRecipeIds.add(it.id) }
+
                 if (isInitialLoad) {
-                    allRecipes = page.items.toMutableList()
+                    allRecipes = newItems.toMutableList()
                     if (!hasAnimatedInitialLoad) {
                         hasAnimatedInitialLoad = true
-                        recipeAdapter.playEnterAnimation(page.items.size)
+                        recipeAdapter.playEnterAnimation(newItems.size)
                     }
                 } else {
-                    allRecipes.addAll(page.items)
+                    allRecipes.addAll(newItems)
                 }
                 recipeAdapter.submitList(allRecipes.toList())
                 headerAdapter.setRecipeCount(totalRecipes)
 
                 if (featured == null) fallbackFeatured()
                 updateRecipeList()
+
+                // Bestand eine Seite nur aus Dubletten, wächst die Liste nicht
+                // und das Ende des Scrollbereichs löst kein weiteres Nachladen
+                // aus. Dann wird direkt weitergeblättert.
+                if (!isInitialLoad && newItems.isEmpty() && page.items.isNotEmpty() && hasMore) {
+                    loadMoreRecipes()
+                }
             }.onFailure { error ->
                 Log.e(TAG, "loadRecipes onFailure", error)
                 showError(error.message ?: "Fehler beim Laden der Rezepte")

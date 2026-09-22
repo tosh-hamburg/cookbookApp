@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Filter-Chip der Rezeptliste.
+
+    Der Style muss auf der View liegen, nicht nur auf dem ChipDrawable: die
+    Fläche zeichnet das Drawable, den Text aber die View. Bekommt nur das
+    Drawable den Style, bleibt die Schrift auf der Material-Vorgabefarbe
+    stehen — der aktive Chip wäre Tinte auf Tinte.
+-->
+<com.google.android.material.chip.Chip
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Theme.Cookbook.Chip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:checkable="true" />
