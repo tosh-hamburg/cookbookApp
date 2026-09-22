@@ -560,6 +560,14 @@ class MainActivity : AppCompatActivity() {
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
                 searchJob?.cancel()
                 applySearchQuery("")
+
+                // Wird die Activity bei aufgeklappter Suche verlassen (etwa über das
+                // Überlaufmenü in den Wochenplaner) und die Suche erst nach der Rückkehr
+                // eingeklappt, legt der ActionMenuPresenter für den Punkt keine View mehr
+                // an: Die Lupe verschwindet samt ihrem Platz aus dem Toolbar und steht
+                // auch nicht im Überlauf. Ein Neuaufbau des Menüs stellt sie wieder her.
+                // Verzögert, weil das Einklappen an dieser Stelle noch läuft.
+                binding.toolbar.post { invalidateOptionsMenu() }
                 return true
             }
         })
