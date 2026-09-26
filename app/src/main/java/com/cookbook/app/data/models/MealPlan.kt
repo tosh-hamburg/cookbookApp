@@ -40,11 +40,13 @@ object DayNames {
 }
 
 /**
- * MealSlot from API response
+ * MealSlot from API response — eine Zeile je Gericht. Ein Slot (Tag × Mahlzeit)
+ * kann mehrere Gerichte enthalten; [position] legt die Reihenfolge fest.
  */
 data class MealSlotResponse(
     val dayIndex: Int,
     val mealType: String,
+    val position: Int = 0,
     val servings: Int,
     val recipe: MealRecipeResponse?
 ) : Serializable
@@ -77,12 +79,20 @@ data class MealPlanResponse(
 ) : Serializable
 
 /**
- * Local MealSlot with recipe reference
+ * Ein geplantes Gericht mit eigener Portionszahl.
+ */
+data class PlannedDish(
+    val recipe: MealRecipeResponse,
+    val servings: Int = DEFAULT_SERVINGS
+) : Serializable
+
+/**
+ * Ein Slot des Wochenplans (Tag × Mahlzeit). Er kann mehrere Gerichte
+ * aufnehmen, zum Beispiel Hauptgericht und Nachtisch.
  */
 data class MealSlot(
     val mealType: MealType,
-    val recipe: MealRecipeResponse? = null,
-    val servings: Int = 2
+    val dishes: List<PlannedDish> = emptyList()
 ) : Serializable
 
 /**
@@ -91,19 +101,14 @@ data class MealSlot(
 data class DayPlan(
     val date: Date,
     val dayIndex: Int,
-    val meals: MutableMap<MealType, MealSlot> = mutableMapOf(
-        MealType.BREAKFAST to MealSlot(MealType.BREAKFAST),
-        MealType.LUNCH to MealSlot(MealType.LUNCH),
-        MealType.DINNER to MealSlot(MealType.DINNER)
-    )
+    val meals: Map<MealType, MealSlot> = MealType.entries.associateWith { MealSlot(it) }
 ) : Serializable {
-    
+
     fun getMeal(mealType: MealType): MealSlot = meals[mealType] ?: MealSlot(mealType)
-    
-    fun setMeal(mealType: MealType, slot: MealSlot) {
-        meals[mealType] = slot
-    }
-    
+
+    /** Tag mit ersetztem Slot; der bisherige Tag bleibt unverändert. */
+    fun withMeal(slot: MealSlot): DayPlan = copy(meals = meals + (slot.mealType to slot))
+
     fun getFormattedDate(): String {
         val format = SimpleDateFormat("dd.MM.", Locale.getDefault())
         return format.format(date)
@@ -228,49 +233,60 @@ data class WeekPlan(
     }
     
     /**
-     * Convert API response to WeekPlan
+     * Convert API response to WeekPlan. Mehrere Zeilen desselben Slots werden
+     * nach [MealSlotResponse.position] zu einer Gerichteliste zusammengefasst.
      */
     fun updateFromResponse(response: MealPlanResponse): WeekPlan {
-        val updatedDays = days.map { day -> day.copy() }
-        
-        for (mealSlot in response.meals) {
-            if (mealSlot.dayIndex in 0..6) {
-                val mealType = MealType.fromKey(mealSlot.mealType)
-                if (mealType != null) {
-                    updatedDays[mealSlot.dayIndex].setMeal(
-                        mealType,
-                        MealSlot(
-                            mealType = mealType,
-                            recipe = mealSlot.recipe,
-                            servings = mealSlot.servings
-                        )
-                    )
-                }
+        val dishesBySlot = response.meals
+            .mapNotNull { slot ->
+                val recipe = slot.recipe ?: return@mapNotNull null
+                val mealType = MealType.fromKey(slot.mealType) ?: return@mapNotNull null
+                if (slot.dayIndex !in days.indices) return@mapNotNull null
+                SlotEntry(slot.dayIndex, mealType, slot.position, PlannedDish(recipe, slot.servings))
             }
+            .sortedBy { it.position }
+            .groupBy({ it.dayIndex to it.mealType }, { it.dish })
+
+        val updatedDays = days.map { day ->
+            day.copy(
+                meals = MealType.entries.associateWith { mealType ->
+                    MealSlot(mealType, dishesBySlot[day.dayIndex to mealType] ?: emptyList())
+                }
+            )
         }
-        
+
         return copy(
             days = updatedDays,
             sentIngredients = response.sentIngredients.toSet(),
             excludedIngredients = response.excludedIngredients.toSet()
         )
     }
-    
+
     /**
-     * Count total planned meals
+     * Belegte Slots (höchstens 21) — ein Slot zählt einmal, auch wenn Haupt-
+     * gericht und Nachtisch darin liegen.
      */
-    fun getTotalMealsPlanned(): Int {
+    fun getFilledSlotCount(): Int {
         return days.sumOf { day ->
-            day.meals.values.count { it.recipe != null }
+            day.meals.values.count { it.dishes.isNotEmpty() }
         }
     }
-    
+
+    /**
+     * Alle geplanten Gerichte der Woche.
+     */
+    fun getTotalDishCount(): Int {
+        return days.sumOf { day ->
+            day.meals.values.sumOf { it.dishes.size }
+        }
+    }
+
     /**
      * Get all recipes in the week plan
      */
     fun getAllRecipes(): List<MealRecipeResponse> {
         return days.flatMap { day ->
-            day.meals.values.mapNotNull { it.recipe }
+            day.meals.values.flatMap { slot -> slot.dishes.map { it.recipe } }
         }.distinctBy { it.id }
     }
     
@@ -297,13 +313,47 @@ data class IngredientSource(
 ) : Serializable
 
 /**
- * Request model for updating a meal slot
+ * Eine Antwortzeile beim Einlesen: Gericht samt Slot und Reihenfolge.
  */
-data class MealSlotUpdateRequest(
+private data class SlotEntry(
+    val dayIndex: Int,
+    val mealType: MealType,
+    val position: Int,
+    val dish: PlannedDish
+)
+
+/**
+ * Ein Gericht in einem Slot-Schreibzugriff.
+ */
+data class MealDishRequest(
+    val recipeId: String,
+    val servings: Int
+)
+
+/**
+ * Gerichte eines Slots ersetzen; eine leere Liste leert den Slot.
+ */
+data class SlotDishesRequest(
     val dayIndex: Int,
     val mealType: String,
-    val recipeId: String?,
-    val servings: Int = 2
+    val dishes: List<MealDishRequest>
+)
+
+/**
+ * Request model for replacing whole slots (PUT .../slots)
+ */
+data class ReplaceSlotsRequest(
+    val slots: List<SlotDishesRequest>
+)
+
+/**
+ * Request model for appending one dish to a slot (POST .../slot)
+ */
+data class AppendDishRequest(
+    val dayIndex: Int,
+    val mealType: String,
+    val recipeId: String,
+    val servings: Int
 )
 
 /**

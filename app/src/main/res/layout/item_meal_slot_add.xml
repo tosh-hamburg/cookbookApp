@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Weiteres Gericht in einen belegten Slot legen, z. B. den Nachtisch.
+     Flacher als eine Gerichtzeile, damit die Tageskarte ruhig bleibt. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/addDishRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_slot_empty"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:layerType="software"
+    android:minHeight="38dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="10dp"
+    android:paddingVertical="6dp">
+
+    <ImageView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_add"
+        app:tint="@color/text_hint" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="@string/slot_add_dish"
+        android:textAppearance="@style/TextAppearance.Cookbook.Label" />
+
+</LinearLayout>

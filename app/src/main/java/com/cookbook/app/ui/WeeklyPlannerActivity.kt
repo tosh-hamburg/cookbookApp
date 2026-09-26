@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.content.res.ColorStateList
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +23,7 @@ import com.cookbook.app.data.repository.MealPlanRepository
 import com.cookbook.app.databinding.ActivityWeeklyPlannerBinding
 import com.cookbook.app.databinding.ItemDayPlanBinding
 import com.cookbook.app.databinding.ItemIngredientAggregatedBinding
+import com.cookbook.app.databinding.ItemMealSlotAddBinding
 import com.cookbook.app.databinding.ItemMealSlotBinding
 import kotlinx.coroutines.launch
 import java.util.*
@@ -130,7 +132,7 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         binding.textWeekRange.text = getString(
             R.string.week_meals_summary,
             weekPlan.getFormattedRange(),
-            weekPlan.getTotalMealsPlanned()
+            weekPlan.getFilledSlotCount()
         )
     }
 
@@ -164,25 +166,52 @@ class WeeklyPlannerActivity : AppCompatActivity() {
 
             dayBinding.mealSlotsContainer.removeAllViews()
 
-            for (mealType in listOf(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER)) {
-                val mealSlot = day.getMeal(mealType)
-                val slotBinding = ItemMealSlotBinding.inflate(
-                    LayoutInflater.from(this),
-                    dayBinding.mealSlotsContainer,
-                    false
-                )
-
-                setupMealSlotView(slotBinding, mealSlot, day.dayIndex, day.getDayName(this))
-                dayBinding.mealSlotsContainer.addView(slotBinding.root)
+            for (mealType in MealType.entries) {
+                addSlotViews(dayBinding.mealSlotsContainer, day, mealType)
             }
 
             binding.daysContainer.addView(dayBinding.root)
         }
     }
 
+    /**
+     * Ein Slot ist eine Gruppe: je geplantes Gericht eine Zeile und darunter
+     * "Gericht hinzufügen", solange noch Platz ist. Ein leerer Slot bleibt eine
+     * einzelne gestrichelte Zeile.
+     */
+    private fun addSlotViews(container: LinearLayout, day: DayPlan, mealType: MealType) {
+        val dishes = day.getMeal(mealType).dishes
+        val dayName = day.getDayName(this)
+        val inflater = LayoutInflater.from(this)
+
+        if (dishes.isEmpty()) {
+            val slotBinding = ItemMealSlotBinding.inflate(inflater, container, false)
+            bindEmptySlot(slotBinding, mealType, day.dayIndex, dayName)
+            container.addView(slotBinding.root)
+            return
+        }
+
+        dishes.forEachIndexed { dishIndex, dish ->
+            val slotBinding = ItemMealSlotBinding.inflate(inflater, container, false)
+            bindDish(slotBinding, mealType, dish, showMealType = dishIndex == 0)
+            slotBinding.slotRoot.setOnClickListener {
+                openSlotDetail(day.dayIndex, mealType, dayName, dishIndex)
+            }
+            container.addView(slotBinding.root)
+        }
+
+        if (dishes.size < MAX_DISHES_PER_SLOT) {
+            val addBinding = ItemMealSlotAddBinding.inflate(inflater, container, false)
+            addBinding.addDishRoot.setOnClickListener {
+                openRecipeSearch(day.dayIndex, mealType, dayName)
+            }
+            container.addView(addBinding.root)
+        }
+    }
+
     /** "geplant", "{n} offen" oder "ganz offen" — je nachdem, wie voll der Tag ist. */
     private fun bindDayStatus(dayBinding: ItemDayPlanBinding, day: DayPlan) {
-        val planned = day.meals.values.count { it.recipe != null }
+        val planned = day.meals.values.count { it.dishes.isNotEmpty() }
         val open = day.meals.size - planned
 
         val (text, colorRes) = when {
@@ -194,42 +223,52 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         dayBinding.textDayStatus.setTextColor(ContextCompat.getColor(this, colorRes))
     }
 
-    /**
-     * Belegt: weiße Zeile mit Sammlungs-Tile oder Rezeptfoto.
-     * Leer: gestrichelter Rahmen mit Plus. Ein Tipp öffnet das Slot-Detail
-     * beziehungsweise direkt die Rezeptauswahl.
-     */
-    private fun setupMealSlotView(
+    /** Leerer Slot: gestrichelter Rahmen mit Plus, ein Tipp öffnet die Auswahl. */
+    private fun bindEmptySlot(
         slotBinding: ItemMealSlotBinding,
-        mealSlot: MealSlot,
+        mealType: MealType,
         dayIndex: Int,
         dayName: String
     ) {
-        val mealType = mealSlot.mealType
         slotBinding.textMealType.text = mealType.getLabel(this)
+        slotBinding.slotRoot.setBackgroundResource(R.drawable.bg_slot_empty)
+        slotBinding.slotTile.backgroundTintList =
+            ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+        slotBinding.iconMealType.visibility = View.VISIBLE
+        slotBinding.iconMealType.setImageResource(R.drawable.ic_add)
+        slotBinding.iconMealType.imageTintList =
+            ColorStateList.valueOf(ContextCompat.getColor(this, R.color.text_hint))
+        slotBinding.imageRecipe.visibility = View.GONE
+        slotBinding.textRecipeTitle.setText(R.string.choose_recipe)
+        slotBinding.textRecipeTitle.setTextAppearance(R.style.TextAppearance_Cookbook_Body)
+        slotBinding.textRecipeTitle.setTextColor(ContextCompat.getColor(this, R.color.text_hint))
+        slotBinding.textTime.visibility = View.GONE
+        slotBinding.iconTrailing.setImageResource(R.drawable.ic_add)
 
-        val recipe = mealSlot.recipe
-        if (recipe == null) {
-            slotBinding.slotRoot.setBackgroundResource(R.drawable.bg_slot_empty)
-            slotBinding.slotTile.backgroundTintList =
-                ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
-            slotBinding.iconMealType.visibility = View.VISIBLE
-            slotBinding.iconMealType.setImageResource(R.drawable.ic_add)
-            slotBinding.iconMealType.imageTintList =
-                ColorStateList.valueOf(ContextCompat.getColor(this, R.color.text_hint))
-            slotBinding.imageRecipe.visibility = View.GONE
-            slotBinding.textRecipeTitle.setText(R.string.choose_recipe)
-            slotBinding.textRecipeTitle.setTextAppearance(R.style.TextAppearance_Cookbook_Body)
-            slotBinding.textRecipeTitle.setTextColor(ContextCompat.getColor(this, R.color.text_hint))
-            slotBinding.textTime.visibility = View.GONE
-            slotBinding.iconTrailing.setImageResource(R.drawable.ic_add)
+        slotBinding.slotRoot.setOnClickListener {
+            // Angetippt: kurz hervorheben, dann die Auswahl öffnen.
+            slotBinding.slotRoot.setBackgroundResource(R.drawable.bg_slot_selected)
+            openRecipeSearch(dayIndex, mealType, dayName)
+        }
+    }
 
-            slotBinding.slotRoot.setOnClickListener {
-                // Angetippt: kurz hervorheben, dann die Auswahl öffnen.
-                slotBinding.slotRoot.setBackgroundResource(R.drawable.bg_slot_selected)
-                openRecipeSearch(dayIndex, mealType, dayName)
-            }
-            return
+    /**
+     * Ein geplantes Gericht: weiße Zeile mit Sammlungs-Tile oder Rezeptfoto.
+     * Die Mahlzeit steht nur über dem ersten Gericht des Slots, die Portionen
+     * an jedem — Hauptgericht und Nachtisch dürfen sich unterscheiden.
+     */
+    private fun bindDish(
+        slotBinding: ItemMealSlotBinding,
+        mealType: MealType,
+        dish: PlannedDish,
+        showMealType: Boolean
+    ) {
+        val recipe = dish.recipe
+        val servingsLabel = getString(R.string.servings_compact, dish.servings)
+        slotBinding.textMealType.text = if (showMealType) {
+            getString(R.string.slot_label_format, mealType.getLabel(this), servingsLabel)
+        } else {
+            servingsLabel
         }
 
         val collectionColor = CollectionColors.forName(recipe.categories.firstOrNull())
@@ -257,10 +296,6 @@ class WeeklyPlannerActivity : AppCompatActivity() {
             slotBinding.textTime.visibility = View.GONE
         }
         slotBinding.iconTrailing.setImageResource(R.drawable.ic_chevron_right)
-
-        slotBinding.slotRoot.setOnClickListener {
-            openSlotDetail(dayIndex, mealType, dayName, mealSlot)
-        }
     }
 
     /** Portionen, Rezept öffnen, entfernen — alles im Slot-Detail. */
@@ -268,19 +303,19 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         dayIndex: Int,
         mealType: MealType,
         dayName: String,
-        mealSlot: MealSlot
+        dishIndex: Int
     ) {
-        val recipe = mealSlot.recipe ?: return
+        val dish = weekPlan.dishesAt(dayIndex, mealType).getOrNull(dishIndex) ?: return
         MealSlotBottomSheet.newInstance(
             dayName = dayName,
             mealType = mealType,
-            recipeTitle = recipe.title,
-            servings = mealSlot.servings,
+            recipeTitle = dish.recipe.title,
+            servings = dish.servings,
             onServingsChanged = { servings ->
-                updateServings(dayIndex, mealType, servings, recipe.id)
+                updateServings(dayIndex, mealType, dishIndex, servings)
             },
-            onOpenRecipe = { openRecipeDetail(recipe.id) },
-            onRemove = { removeRecipeFromSlot(dayIndex, mealType) }
+            onOpenRecipe = { openRecipeDetail(dish.recipe.id) },
+            onRemove = { removeDish(dayIndex, mealType, dishIndex) }
         ).show(supportFragmentManager, "mealSlot")
     }
 
@@ -298,18 +333,30 @@ class WeeklyPlannerActivity : AppCompatActivity() {
             mealType = mealType,
             dayName = dayName
         ) { recipe, selectedDayIndex, selectedMealType ->
-            addRecipeToSlot(selectedDayIndex, selectedMealType, recipe)
+            addDishToSlot(selectedDayIndex, selectedMealType, recipe)
         }
         bottomSheet.show(supportFragmentManager, "recipe_search")
     }
 
-    private fun addRecipeToSlot(dayIndex: Int, mealType: MealType, recipe: RecipeListItem) {
-        val servings = 2 // Default servings
+    /**
+     * Gericht an den Slot anhängen. Dasselbe Rezept zweimal im selben Slot oder
+     * ein siebtes Gericht lehnt auch das Backend ab — hier fällt die Antwort
+     * sofort und übersetzt aus.
+     */
+    private fun addDishToSlot(dayIndex: Int, mealType: MealType, recipe: RecipeListItem) {
+        when (weekPlan.canAddDish(dayIndex, mealType, recipe.id)) {
+            AddDishCheck.DUPLICATE -> {
+                showMessage(R.string.recipe_already_in_slot)
+                return
+            }
+            AddDishCheck.FULL -> {
+                showMessage(R.string.slot_full)
+                return
+            }
+            AddDishCheck.OK -> Unit
+        }
 
-        // Update local state immediately
-        val day = weekPlan.days[dayIndex]
-        day.setMeal(mealType, MealSlot(
-            mealType = mealType,
+        val dish = PlannedDish(
             recipe = MealRecipeResponse(
                 id = recipe.id,
                 title = recipe.title,
@@ -318,81 +365,78 @@ class WeeklyPlannerActivity : AppCompatActivity() {
                 totalTime = recipe.totalTime,
                 categories = recipe.categories
             ),
-            servings = servings
-        ))
-        updateUI()
+            // Die Portionen des Rezepts als Vorschlag; das Backend nimmt nur 1–99.
+            servings = recipe.servings.takeIf { it >= MIN_SERVINGS }?.coerceAtMost(MAX_SERVINGS)
+                ?: DEFAULT_SERVINGS
+        )
 
-        // Save to backend
-        lifecycleScope.launch {
-            val result = mealPlanRepository.updateMealSlot(
-                weekStart = currentWeekStart,
-                dayIndex = dayIndex,
-                mealType = mealType,
-                recipeId = recipe.id,
-                servings = servings
-            )
-
-            result.onFailure {
-                Toast.makeText(
-                    this@WeeklyPlannerActivity,
-                    getString(R.string.error_saving_meal),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
+        saveSlot(dayIndex, mealType, weekPlan.dishesAt(dayIndex, mealType) + dish)
     }
 
-    private fun removeRecipeFromSlot(dayIndex: Int, mealType: MealType) {
-        // Update local state immediately
-        val day = weekPlan.days[dayIndex]
-        day.setMeal(mealType, MealSlot(mealType = mealType))
+    private fun removeDish(dayIndex: Int, mealType: MealType, dishIndex: Int) {
+        val dishes = weekPlan.dishesAt(dayIndex, mealType)
+        if (dishIndex !in dishes.indices) return
+
+        saveSlot(
+            dayIndex = dayIndex,
+            mealType = mealType,
+            dishes = dishes.filterIndexed { index, _ -> index != dishIndex },
+            successMessageId = R.string.meal_removed
+        )
+    }
+
+    private fun updateServings(dayIndex: Int, mealType: MealType, dishIndex: Int, newServings: Int) {
+        if (newServings !in MIN_SERVINGS..MAX_SERVINGS) return
+
+        val updated = weekPlan.withDishServings(dayIndex, mealType, dishIndex, newServings)
+        if (updated === weekPlan) return
+
+        saveSlot(dayIndex, mealType, updated.dishesAt(dayIndex, mealType))
+    }
+
+    /**
+     * Slot lokal setzen und gleich speichern. Geschrieben wird immer der ganze
+     * Slot, damit Reihenfolge und Portionen zusammen ankommen; scheitert das
+     * Speichern, steht wieder der alte Stand da.
+     */
+    private fun saveSlot(
+        dayIndex: Int,
+        mealType: MealType,
+        dishes: List<PlannedDish>,
+        successMessageId: Int? = null
+    ) {
+        val previousPlan = weekPlan
+        val optimisticPlan = weekPlan.withDishesAt(dayIndex, mealType, dishes)
+        weekPlan = optimisticPlan
         updateUI()
 
-        // Save to backend
         lifecycleScope.launch {
-            val result = mealPlanRepository.updateMealSlot(
+            val result = mealPlanRepository.replaceSlotDishes(
                 weekStart = currentWeekStart,
                 dayIndex = dayIndex,
                 mealType = mealType,
-                recipeId = null,
-                servings = 2
+                dishes = dishes
             )
 
-            result.onSuccess {
-                Toast.makeText(
-                    this@WeeklyPlannerActivity,
-                    getString(R.string.meal_removed),
-                    Toast.LENGTH_SHORT
-                ).show()
+            result.onSuccess { response ->
+                // Die Antwort bringt die Zutaten der neuen Gerichte mit, die in
+                // der Rezeptauswahl fehlen — nur übernehmen, wenn in der
+                // Zwischenzeit nichts anderes geändert wurde.
+                if (weekPlan === optimisticPlan) {
+                    weekPlan = weekPlan.updateFromResponse(response)
+                    updateUI()
+                }
+                successMessageId?.let { showMessage(it) }
             }.onFailure {
-                Toast.makeText(
-                    this@WeeklyPlannerActivity,
-                    getString(R.string.error_saving_meal),
-                    Toast.LENGTH_SHORT
-                ).show()
+                weekPlan = previousPlan
+                updateUI()
+                showMessage(R.string.error_saving_meal)
             }
         }
     }
 
-    private fun updateServings(dayIndex: Int, mealType: MealType, newServings: Int, recipeId: String) {
-        if (newServings < 1 || newServings > 99) return
-
-        // Update local state immediately
-        val day = weekPlan.days[dayIndex]
-        val currentMeal = day.getMeal(mealType)
-        day.setMeal(mealType, currentMeal.copy(servings = newServings))
-        updateUI()
-
-        // Save to backend
-        lifecycleScope.launch {
-            mealPlanRepository.updateMealSlot(
-                weekStart = currentWeekStart,
-                dayIndex = dayIndex,
-                mealType = mealType,
-                recipeId = recipeId,
-                servings = newServings
-            )
-        }
+    private fun showMessage(messageId: Int) {
+        Toast.makeText(this, getString(messageId), Toast.LENGTH_SHORT).show()
     }
 
     private fun openRecipeDetail(recipeId: String) {
@@ -420,7 +464,7 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         binding.textShoppingSummary.text = getString(
             R.string.shopping_positions,
             visibleIngredients.size,
-            weekPlan.getTotalMealsPlanned()
+            weekPlan.getTotalDishCount()
         )
         binding.cardIngredients.visibility =
             if (isShoppingListExpanded) View.VISIBLE else View.GONE
@@ -561,27 +605,28 @@ class WeeklyPlannerActivity : AppCompatActivity() {
         val ingredientMap = mutableMapOf<String, MutableList<Pair<Double, String>>>()
         val sourceMap = mutableMapOf<String, MutableList<IngredientSource>>()
 
+        // Jedes Gericht zählt eigenständig — ein Slot kann mehrere enthalten.
         for (day in weekPlan.days) {
-            for (mealType in listOf(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER)) {
-                val meal = day.getMeal(mealType)
-                val recipe = meal.recipe ?: continue
+            for (slot in day.meals.values) {
+                for (dish in slot.dishes) {
+                    val recipe = dish.recipe
+                    val scaleFactor = dish.servings.toDouble() / (recipe.servings.takeIf { it > 0 } ?: 1)
 
-                val scaleFactor = meal.servings.toDouble() / (recipe.servings.takeIf { it > 0 } ?: 1)
+                    for (ingredient in recipe.ingredients) {
+                        val normalizedName = ingredient.name.lowercase().trim()
+                        val parsed = parseAmount(ingredient.amount)
+                        val scaledValue = parsed.first * scaleFactor
 
-                for (ingredient in recipe.ingredients) {
-                    val normalizedName = ingredient.name.lowercase().trim()
-                    val parsed = parseAmount(ingredient.amount)
-                    val scaledValue = parsed.first * scaleFactor
+                        ingredientMap.getOrPut(normalizedName) { mutableListOf() }
+                            .add(Pair(scaledValue, parsed.second))
 
-                    ingredientMap.getOrPut(normalizedName) { mutableListOf() }
-                        .add(Pair(scaledValue, parsed.second))
-
-                    sourceMap.getOrPut(normalizedName) { mutableListOf() }
-                        .add(IngredientSource(
-                            recipeTitle = recipe.title,
-                            servings = meal.servings,
-                            originalAmount = ingredient.amount
-                        ))
+                        sourceMap.getOrPut(normalizedName) { mutableListOf() }
+                            .add(IngredientSource(
+                                recipeTitle = recipe.title,
+                                servings = dish.servings,
+                                originalAmount = ingredient.amount
+                            ))
+                    }
                 }
             }
         }
@@ -654,7 +699,7 @@ class WeeklyPlannerActivity : AppCompatActivity() {
     }
 
     private fun updateEmptyState() {
-        val hasMeals = weekPlan.getTotalMealsPlanned() > 0
+        val hasMeals = weekPlan.getTotalDishCount() > 0
         binding.emptyStateContainer.visibility = if (hasMeals) View.GONE else View.VISIBLE
     }
 

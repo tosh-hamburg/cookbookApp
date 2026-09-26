@@ -41,38 +41,81 @@ class MealPlanRepository {
     }
     
     /**
-     * Update a single meal slot
+     * Gerichte eines Slots ersetzen. Eine leere Liste leert den Slot; die
+     * Reihenfolge der Liste ist die Reihenfolge im Slot.
      */
-    suspend fun updateMealSlot(
+    suspend fun replaceSlotDishes(
         weekStart: Date,
         dayIndex: Int,
         mealType: MealType,
-        recipeId: String?,
+        dishes: List<PlannedDish>
+    ): Result<MealPlanResponse> {
+        return try {
+            val weekStartStr = WeekPlan.formatDateForApi(weekStart)
+            Log.d(TAG, "replaceSlotDishes: weekStart=$weekStartStr, day=$dayIndex, type=${mealType.key}, dishes=${dishes.size}")
+
+            val request = ReplaceSlotsRequest(
+                slots = listOf(
+                    SlotDishesRequest(
+                        dayIndex = dayIndex,
+                        mealType = mealType.key,
+                        dishes = dishes.map { MealDishRequest(it.recipe.id, it.servings) }
+                    )
+                )
+            )
+
+            val response = api.replaceMealSlots(weekStartStr, request)
+            val body = response.body()
+
+            if (response.isSuccessful && body != null) {
+                Log.d(TAG, "replaceSlotDishes success")
+                Result.success(body)
+            } else {
+                val error = response.errorBody()?.string() ?: "Fehler beim Speichern der Mahlzeit"
+                Log.e(TAG, "replaceSlotDishes error: $error")
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "replaceSlotDishes exception", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Ein Gericht an einen Slot anhängen, ohne die bereits geplanten Gerichte
+     * zu überschreiben. Der Server lehnt Duplikate und volle Slots ab (409).
+     */
+    suspend fun appendDishToSlot(
+        weekStart: Date,
+        dayIndex: Int,
+        mealType: MealType,
+        recipeId: String,
         servings: Int
     ): Result<MealPlanResponse> {
         return try {
             val weekStartStr = WeekPlan.formatDateForApi(weekStart)
-            Log.d(TAG, "updateMealSlot: weekStart=$weekStartStr, day=$dayIndex, type=${mealType.key}, recipe=$recipeId")
-            
-            val request = MealSlotUpdateRequest(
+            Log.d(TAG, "appendDishToSlot: weekStart=$weekStartStr, day=$dayIndex, type=${mealType.key}, recipe=$recipeId")
+
+            val request = AppendDishRequest(
                 dayIndex = dayIndex,
                 mealType = mealType.key,
                 recipeId = recipeId,
                 servings = servings
             )
-            
-            val response = api.updateMealSlot(weekStartStr, request)
-            
-            if (response.isSuccessful && response.body() != null) {
-                Log.d(TAG, "updateMealSlot success")
-                Result.success(response.body()!!)
+
+            val response = api.appendDishToSlot(weekStartStr, request)
+            val body = response.body()
+
+            if (response.isSuccessful && body != null) {
+                Log.d(TAG, "appendDishToSlot success")
+                Result.success(body)
             } else {
                 val error = response.errorBody()?.string() ?: "Fehler beim Speichern der Mahlzeit"
-                Log.e(TAG, "updateMealSlot error: $error")
+                Log.e(TAG, "appendDishToSlot error: $error")
                 Result.failure(Exception(error))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "updateMealSlot exception", e)
+            Log.e(TAG, "appendDishToSlot exception", e)
             Result.failure(e)
         }
     }

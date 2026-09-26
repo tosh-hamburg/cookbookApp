@@ -13,8 +13,9 @@ import com.cookbook.app.data.models.ExcludeIngredientsRequest
 import com.cookbook.app.data.models.ExcludeIngredientsResponse
 import com.cookbook.app.data.models.MarkIngredientsSentRequest
 import com.cookbook.app.data.models.MarkIngredientsSentResponse
+import com.cookbook.app.data.models.AppendDishRequest
 import com.cookbook.app.data.models.MealPlanResponse
-import com.cookbook.app.data.models.MealSlotUpdateRequest
+import com.cookbook.app.data.models.ReplaceSlotsRequest
 import com.cookbook.app.data.models.PaginatedRecipes
 import com.cookbook.app.data.models.Recipe
 import com.cookbook.app.data.models.RecipeRequest
@@ -131,10 +132,18 @@ interface CookbookApi {
     @GET("mealplans/{weekStart}")
     suspend fun getMealPlan(@Path("weekStart") weekStart: String): Response<MealPlanResponse>
     
-    @PATCH("mealplans/{weekStart}/slot")
-    suspend fun updateMealSlot(
+    /** Gerichte eines oder mehrerer Slots ersetzen; leere Liste leert den Slot. */
+    @PUT("mealplans/{weekStart}/slots")
+    suspend fun replaceMealSlots(
         @Path("weekStart") weekStart: String,
-        @Body request: MealSlotUpdateRequest
+        @Body request: ReplaceSlotsRequest
+    ): Response<MealPlanResponse>
+
+    /** Ein Gericht an einen Slot anhängen; 409 bei Duplikat oder vollem Slot. */
+    @POST("mealplans/{weekStart}/slot")
+    suspend fun appendDishToSlot(
+        @Path("weekStart") weekStart: String,
+        @Body request: AppendDishRequest
     ): Response<MealPlanResponse>
     
     @POST("mealplans/{weekStart}/sent-ingredients")

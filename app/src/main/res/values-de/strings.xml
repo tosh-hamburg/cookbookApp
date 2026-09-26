@@ -251,6 +251,10 @@
     <string name="open_action">Öffnen</string>
     <string name="slot_open_recipe">Rezept öffnen</string>
     <string name="slot_remove">Entfernen</string>
+    <string name="slot_add_dish">Gericht hinzufügen</string>
+    <string name="slot_full">In diesem Slot ist kein Platz mehr</string>
+    <string name="recipe_already_in_slot">Das Rezept ist in diesem Slot schon geplant</string>
+    <string name="servings_compact">%d Port.</string>
 
     <!-- ===== Küchentisch: Rezept hinzufügen ===== -->
     <string name="add_recipe_title">Rezept hinzufügen</string>

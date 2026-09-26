@@ -73,6 +73,16 @@
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textSize="14sp" />
 
+                <!-- Anzahl der Gerichte, die schon in diesem Slot liegen -->
+                <TextView
+                    android:id="@+id/textBreakfastCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="?attr/colorPrimary"
+                    android:visibility="gone" />
+
                 <ImageView
                     android:id="@+id/checkBreakfast"
                     android:layout_width="20dp"
@@ -112,6 +122,15 @@
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textSize="14sp" />
 
+                <TextView
+                    android:id="@+id/textLunchCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="?attr/colorPrimary"
+                    android:visibility="gone" />
+
                 <ImageView
                     android:id="@+id/checkLunch"
                     android:layout_width="20dp"
@@ -150,6 +169,15 @@
                     android:text="@string/dinner"
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/textDinnerCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="?attr/colorPrimary"
+                    android:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/checkDinner"

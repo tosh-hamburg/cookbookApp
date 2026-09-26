@@ -9,9 +9,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cookbook.app.R
+import com.cookbook.app.data.models.AddDishCheck
+import com.cookbook.app.data.models.MAX_SERVINGS
+import com.cookbook.app.data.models.MIN_SERVINGS
 import com.cookbook.app.data.models.MealType
 import com.cookbook.app.data.models.Recipe
 import com.cookbook.app.data.models.WeekPlan
+import com.cookbook.app.data.models.canAddDish
+import com.cookbook.app.data.models.dishesAt
 import com.cookbook.app.data.repository.MealPlanRepository
 import com.cookbook.app.databinding.DialogAddToWeekPlannerBinding
 import com.cookbook.app.databinding.ItemDayMealSelectionBinding
@@ -223,18 +228,22 @@ class AddToWeekPlannerBottomSheet : BottomSheetDialogFragment() {
         (binding.recyclerDayMealSlots.adapter as? DayMealAdapter)?.notifyDataSetChanged()
     }
     
+    /**
+     * Rezept an den gewählten Slot anhängen. Der Slot darf schon belegt sein —
+     * so kommt der Nachtisch zum Hauptgericht.
+     */
     private fun addRecipeToSlot() {
         val dayIndex = selectedDayIndex ?: return
         val mealType = selectedMealType ?: return
-        
+
         lifecycleScope.launch {
             try {
-                val result = mealPlanRepository.updateMealSlot(
+                val result = mealPlanRepository.appendDishToSlot(
                     weekStart = currentWeekStart,
                     dayIndex = dayIndex,
                     mealType = mealType,
                     recipeId = recipeId,
-                    servings = recipeServings
+                    servings = recipeServings.coerceIn(MIN_SERVINGS, MAX_SERVINGS)
                 )
                 
                 result.onSuccess {
@@ -291,72 +300,60 @@ class AddToWeekPlannerBottomSheet : BottomSheetDialogFragment() {
             
             fun bind(dayIndex: Int) {
                 val day = weekPlan.days[dayIndex]
-                
+
                 binding.textDayName.text = day.getDayName(itemView.context)
                 binding.textDayDate.text = day.getFormattedDate()
-                
-                // Check if slots are occupied
-                val isBreakfastOccupied = day.getMeal(MealType.BREAKFAST).recipe != null
-                val isLunchOccupied = day.getMeal(MealType.LUNCH).recipe != null
-                val isDinnerOccupied = day.getMeal(MealType.DINNER).recipe != null
-                
-                // Setup meal slot click listeners (only if not occupied)
-                setupMealSlot(binding.slotBreakfast, dayIndex, MealType.BREAKFAST, isBreakfastOccupied)
-                setupMealSlot(binding.slotLunch, dayIndex, MealType.LUNCH, isLunchOccupied)
-                setupMealSlot(binding.slotDinner, dayIndex, MealType.DINNER, isDinnerOccupied)
-                
-                // Update selection indicators
-                updateCheckVisibility(binding.checkBreakfast, dayIndex, MealType.BREAKFAST, isBreakfastOccupied)
-                updateCheckVisibility(binding.checkLunch, dayIndex, MealType.LUNCH, isLunchOccupied)
-                updateCheckVisibility(binding.checkDinner, dayIndex, MealType.DINNER, isDinnerOccupied)
+
+                bindMealSlot(
+                    dayIndex, MealType.BREAKFAST,
+                    binding.slotBreakfast, binding.textBreakfast,
+                    binding.textBreakfastCount, binding.checkBreakfast
+                )
+                bindMealSlot(
+                    dayIndex, MealType.LUNCH,
+                    binding.slotLunch, binding.textLunch,
+                    binding.textLunchCount, binding.checkLunch
+                )
+                bindMealSlot(
+                    dayIndex, MealType.DINNER,
+                    binding.slotDinner, binding.textDinner,
+                    binding.textDinnerCount, binding.checkDinner
+                )
             }
-            
-            private fun setupMealSlot(
+
+            /**
+             * Ein belegter Slot bleibt wählbar — das Rezept wird angehängt. Nur
+             * wenn es dort schon liegt oder der Slot voll ist, geht es nicht.
+             */
+            private fun bindMealSlot(
+                dayIndex: Int,
+                mealType: MealType,
                 slotView: View,
-                dayIndex: Int,
-                mealType: MealType,
-                isOccupied: Boolean
+                labelView: android.widget.TextView,
+                countView: android.widget.TextView,
+                checkView: View
             ) {
-                // Get the TextView for this meal type
-                val textView = when (mealType) {
-                    MealType.BREAKFAST -> binding.root.findViewById<android.widget.TextView>(com.cookbook.app.R.id.textBreakfast)
-                    MealType.LUNCH -> binding.root.findViewById<android.widget.TextView>(com.cookbook.app.R.id.textLunch)
-                    MealType.DINNER -> binding.root.findViewById<android.widget.TextView>(com.cookbook.app.R.id.textDinner)
-                }
-                
-                if (isOccupied) {
-                    slotView.isEnabled = false
-                    slotView.alpha = 0.5f
-                    slotView.setOnClickListener(null)
-                    
-                    // Add strikethrough to text
-                    textView?.paintFlags = textView?.paintFlags?.or(android.graphics.Paint.STRIKE_THRU_TEXT_FLAG) ?: 0
+                val dishCount = weekPlan.dishesAt(dayIndex, mealType).size
+                val isBlocked = weekPlan.canAddDish(dayIndex, mealType, recipeId) != AddDishCheck.OK
+
+                countView.visibility = if (dishCount > 0) View.VISIBLE else View.GONE
+                countView.text = dishCount.toString()
+
+                slotView.isEnabled = !isBlocked
+                slotView.alpha = if (isBlocked) 0.5f else 1.0f
+                slotView.setOnClickListener(
+                    if (isBlocked) null else View.OnClickListener { onSlotClick(dayIndex, mealType) }
+                )
+                labelView.paintFlags = if (isBlocked) {
+                    labelView.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
                 } else {
-                    slotView.isEnabled = true
-                    slotView.alpha = 1.0f
-                    slotView.setOnClickListener { onSlotClick(dayIndex, mealType) }
-                    
-                    // Remove strikethrough from text
-                    textView?.paintFlags = textView?.paintFlags?.and(android.graphics.Paint.STRIKE_THRU_TEXT_FLAG.inv()) ?: 0
+                    labelView.paintFlags and android.graphics.Paint.STRIKE_THRU_TEXT_FLAG.inv()
                 }
+
+                val isSelected = selectedDayIndex == dayIndex && selectedMealType == mealType
+                checkView.visibility = if (isSelected && !isBlocked) View.VISIBLE else View.GONE
             }
-            
-            private fun updateCheckVisibility(
-                checkView: View,
-                dayIndex: Int,
-                mealType: MealType,
-                isOccupied: Boolean
-            ) {
-                checkView.visibility = if (isOccupied) {
-                    // Show a different indicator for occupied slots
-                    View.GONE
-                } else if (selectedDayIndex == dayIndex && selectedMealType == mealType) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
-                }
-            }
-            
+
             private fun onSlotClick(dayIndex: Int, mealType: MealType) {
                 selectedDayIndex = dayIndex
                 selectedMealType = mealType
