@@ -66,7 +66,7 @@
     <string name="servings">Servings</string>
     <string name="portion_singular">serving</string>
     <string name="portion_plural">servings</string>
-    <string name="original_recipe_for">Original recipe for %d %s</string>
+    <string name="original_recipe_for">Original recipe for %1$d %2$s</string>
     <string name="add_to_shopping_list">Add to shopping list</string>
     <string name="prep_time">Preparation</string>
     <string name="rest_time">Rest time</string>
@@ -182,7 +182,7 @@
     <string name="ingredients_sent">Ingredients sent</string>
     <string name="sent_reset">Sent reset</string>
     <string name="excluded_reset">Excluded restored</string>
-    <string name="new_sent_format">%d new / %d sent</string>
+    <string name="new_sent_format">%1$d new / %2$d sent</string>
     
     <!-- Day names -->
     <string-array name="day_names">

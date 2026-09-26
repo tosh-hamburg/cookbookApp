@@ -2,8 +2,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
 }
 
 // Load local.properties for configuration values
@@ -69,10 +67,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-    
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -108,7 +102,6 @@ dependencies {
     
     // JSON Serialization
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     
     // Image Loading - Coil
     implementation("io.coil-kt:coil:2.5.0")

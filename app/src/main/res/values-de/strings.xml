@@ -52,7 +52,7 @@
     <string name="servings">Portionen</string>
     <string name="portion_singular">Portion</string>
     <string name="portion_plural">Portionen</string>
-    <string name="original_recipe_for">Originalrezept für %d %s</string>
+    <string name="original_recipe_for">Originalrezept für %1$d %2$s</string>
     <string name="add_to_shopping_list">Zur Einkaufsliste hinzufügen</string>
     <string name="prep_time">Vorbereitung</string>
     <string name="rest_time">Ruhezeit</string>
@@ -169,7 +169,7 @@
     <string name="ingredients_sent">Zutaten gesendet</string>
     <string name="sent_reset">Gesendet zurückgesetzt</string>
     <string name="excluded_reset">Gelöschte wiederhergestellt</string>
-    <string name="new_sent_format">%d neu / %d gesendet</string>
+    <string name="new_sent_format">%1$d neu / %2$d gesendet</string>
     
     <!-- Day names -->
     <string-array name="day_names">
